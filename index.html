@@ -507,6 +507,11 @@ button { cursor: pointer; }
 .mosaic-fill { position: relative; overflow: hidden; display: grid; place-items: center; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%); animation: fall .7s var(--ease-settle) both; animation-delay: var(--d, 0ms); }
 .mosaic-fill::before { content: ""; position: absolute; width: 70%; aspect-ratio: 1; background: var(--tint, var(--red-stone)); opacity: .14; clip-path: polygon(30% 0, 100% 12%, 88% 78%, 40% 100%, 0 56%); transform: rotate(var(--rot, 0deg)); }
 .mosaic-fill span { position: relative; font-family: var(--f-pixel); font-size: 22px; color: var(--ink-3); letter-spacing: .02em; }
+.trim-spacer { position: relative; margin-top: 22px; }
+.trim-spacer[hidden] { display: none; }
+.trim-spacer + .grid { margin-top: 14px; }
+.trim-note { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); border-top: 1px dashed var(--line-2); border-bottom: 1px dashed var(--line-2); background: repeating-linear-gradient(-18deg, transparent 0 12px, color-mix(in srgb, var(--ink) 3%, transparent) 12px 13px); }
+.card, .mosaic-fill { content-visibility: auto; contain-intrinsic-size: auto 236px; }
 .sec-head { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 6px 16px; padding: 22px 0 12px; border-bottom: 1px solid var(--ink); margin-top: 18px; }
 .sec-head:first-child { margin-top: 0; padding-top: 0; }
 .sec-head .st__idx { grid-column: 1 / -1; }
@@ -1421,7 +1426,7 @@ function animateTotal(n) {
 /* ==================================================================
    FILTERS + GRID
    ================================================================== */
-const BATCH = 12;
+const BATCH = 24;
 let gridItems = [], gridShown = 0, gridLoading = true, observer = null;
 
 function countsByDomain() {
@@ -1484,10 +1489,22 @@ const SHAPES = [[1, 1, .46], [2, 1, .2], [1, 2, .18], [2, 2, .11], [3, 1, .05]];
 function prefShape(key) { let r = rnd01(key + '|s'); for (const [w, h, p] of SHAPES) { if (r < p) return [w, h]; r -= p; } return [1, 1]; }
 const FILL_WORDS = ['Քար առ քար', '◇', 'RED STONE', 'Գիտելիք', '◆ ◇ ◆'];
 
+/* At most this many blocks live on the page per grid. Beyond it, every new block
+   pushes the oldest ones (top rows) out of the DOM; a same-height spacer keeps scroll steady. */
+const MAX_BLOCKS = 500;
 let libMosaic = null;
 class Mosaic {
-  constructor(grid, min) {
+  constructor(grid, min, onRestore) {
     this.grid = grid; this.min = min || 250; this.items = []; this.fills = []; this.occ = []; this.cols = 0;
+    this.trimRows = 0; this.trimCount = 0; this.trimPx = 0; this.onRestore = onRestore;
+    this.spacer = document.createElement('div');
+    this.spacer.className = 'trim-spacer'; this.spacer.hidden = true;
+    this.spacer.innerHTML = '<div class="trim-note"><span class="trim-note__txt"></span><button type="button" class="btn btn--sm">Ցույց տալ սկզբից</button></div>';
+    this.spacer.querySelector('button').addEventListener('click', () => {
+      this.onRestore && this.onRestore();
+      window.scrollTo({ top: this.grid.getBoundingClientRect().top + scrollY - 140, behavior: 'smooth' });
+    });
+    grid.parentNode.insertBefore(this.spacer, grid);
     if ('ResizeObserver' in window) {
       let t = null;
       new ResizeObserver(() => { clearTimeout(t); t = setTimeout(() => { if (this.items.length && this.colsFor() !== this.cols) this.relayout(); }, 120); }).observe(grid);
@@ -1498,7 +1515,37 @@ class Mosaic {
     if (!w) return this.cols || 1;
     return Math.max(1, Math.min(6, Math.floor((w + 14) / (this.min + 14))));
   }
-  reset() { this.items = []; this.clearFills(); this.occ = []; this.cols = this.colsFor(); this.grid.style.setProperty('--cols', this.cols); }
+  reset() {
+    this.items = []; this.clearFills(); this.occ = []; this.cols = this.colsFor(); this.grid.style.setProperty('--cols', this.cols);
+    this.trimRows = 0; this.trimCount = 0; this.trimPx = 0; this.spacer.hidden = true; this.spacer.style.height = '0px';
+  }
+  get count() { return this.items.length; }
+  rowPx() { const cs = getComputedStyle(this.grid); return (parseFloat(cs.gridAutoRows) || 236) + (parseFloat(cs.rowGap) || 14); }
+  /* Remove whole top rows until no more than `cap` blocks remain */
+  trim(cap) {
+    cap = cap || MAX_BLOCKS;
+    const need = this.items.length - cap;
+    if (need <= 0) return 0;
+    const maxR = this.occ.length;
+    let R = 0;
+    for (let r = 1; r < maxR; r++) {
+      if (this.items.some(it => it.r < r && it.r + it.h > r)) continue;      // a block crosses this line
+      if (this.items.filter(it => it.r + it.h <= r).length >= need) { R = r; break; }
+    }
+    if (!R) return 0;
+    const gone = this.items.filter(it => it.r + it.h <= R);
+    const px = R * this.rowPx();
+    gone.forEach(it => it.el.remove());
+    this.items = this.items.filter(it => it.r + it.h > R);
+    this.items.forEach(it => { it.r -= R; this.apply(it); });
+    this.fills.forEach(f => { f.it.r -= R; f.el.style.gridRow = `${f.it.r + 1} / span 1`; });
+    this.occ = this.occ.slice(R);
+    this.trimRows += R; this.trimCount += gone.length; this.trimPx += px;
+    this.spacer.hidden = false;
+    this.spacer.style.height = this.trimPx + 'px';
+    this.spacer.querySelector('.trim-note__txt').textContent = `Վերևի ${fmt(this.trimCount)} բլոկը թաքցված է՝ կայքը արագ աշխատելու համար`;
+    return gone.length;
+  }
   free(r, c) { return c < this.cols && !(this.occ[r] && this.occ[r][c]); }
   fits(r, c, w, h) { if (c + w > this.cols) return false; for (let y = r; y < r + h; y++) for (let x = c; x < c + w; x++) if (!this.free(y, x)) return false; return true; }
   mark(r, c, w, h, v) { for (let y = r; y < r + h; y++) { this.occ[y] = this.occ[y] || []; for (let x = c; x < c + w; x++) this.occ[y][x] = v; } }
@@ -1533,6 +1580,7 @@ class Mosaic {
       el.style.setProperty('--d', Math.min(k * 45 + it.c * 25, 900) + 'ms');
     });
     this.seal();
+    this.trim();
   }
   /* Close the ragged bottom edge: stretch neighbours into holes, then plug any left with brand tiles */
   seal() {
@@ -2077,7 +2125,8 @@ const dedupeKey = r => String(r.title).toLowerCase().replace(/[^\p{L}\p{N}]+/gu,
 function makeSearch(cfg) {
   const el = k => document.getElementById(cfg.ids[k]);
   const S = { src: cfg.src, sig: '', sort: '', q: '', type: 'ALL', domain: 'ALL', page: 0, runs: [], seen: new Set(), loading: false, ready: false, timer: null, empty: 0, view: [] };
-  S.mosaic = new Mosaic(el('grid'));
+  S.shown = 0;   // how many results of S.view are (or were) rendered
+  S.mosaic = new Mosaic(el('grid'), 250, () => S.rerender());
   S.status = html => { const b = el('status'); b.innerHTML = html || ''; b.hidden = !html; };
   S.label = () => {
     const used = S.runs.filter(r => r.n).length;
@@ -2085,7 +2134,7 @@ function makeSearch(cfg) {
   };
   S.reset = () => {
     clearTimeout(S.timer);
-    Object.assign(S, { sig: '', q: '', page: 0, runs: [], seen: new Set(), loading: false, ready: false, empty: 0, view: [] });
+    Object.assign(S, { sig: '', q: '', page: 0, runs: [], seen: new Set(), loading: false, ready: false, empty: 0, view: [], shown: 0 });
     el('grid').innerHTML = ''; el('more').hidden = true;
     S.mosaic.reset();
     cfg.paint();
@@ -2115,6 +2164,13 @@ function makeSearch(cfg) {
   };
   S.loadMore = async () => {
     if (!S.ready || S.loading || !S.sig || S.sig === 'ai') return;
+    if (S.shown < S.view.length) {          // results already fetched but not on the page yet
+      S.renderNext(PER);
+      S.moreUI();
+      const sent = el('sentinel').getBoundingClientRect();
+      if (sent.top < innerHeight + 900 && el('grid').offsetParent) setTimeout(() => S.loadMore(), 60);
+      return;
+    }
     const active = S.runs.filter(r => !r.done && !UNAV.has(r.e.id));
     if (!active.length) { S.moreUI(); return; }
     const sig = S.sig, page = S.page;
@@ -2158,7 +2214,7 @@ function makeSearch(cfg) {
     }
   };
   S.moreUI = () => {
-    const hasMore = S.runs.some(r => !r.done) && S.sig && S.sig !== 'ai';
+    const hasMore = (S.runs.some(r => !r.done) || S.shown < S.view.length) && S.sig && S.sig !== 'ai';
     el('more').hidden = !((hasMore || S.loading) && S.view.length);
     el('loader').hidden = !S.loading;
     el('moreBtn').hidden = S.loading || !hasMore;
@@ -2174,20 +2230,22 @@ function makeSearch(cfg) {
     c.innerHTML = cardHTML({ ...r, id: webId(r), domain: r.source }, i, { web: true, src: S.src, saved: materials.some(m => m.id === webId(r)) });
     return c;
   };
-  S.append = batch => {
+  S.renderNext = n => {
+    const slice = S.view.slice(S.shown, S.shown + n);
+    if (!slice.length) return;
     const frag = document.createDocumentFragment();
-    const els = batch.map(r => { S.view.push(r); return S.card(r, S.view.length - 1); });
+    const els = slice.map((r, k) => S.card(r, S.shown + k));
     els.forEach(e => frag.appendChild(e));
     el('grid').appendChild(frag);
-    S.mosaic.add(els);
+    S.shown += slice.length;
+    S.mosaic.add(els);                       // places, seals and trims to MAX_BLOCKS
   };
-  S.rerender = () => {
+  S.append = batch => { batch.forEach(r => S.view.push(r)); S.renderNext(batch.length); };
+  S.rerender = () => {                       // used by sort changes and "show from the beginning"
     S.sortList(S.view);
-    const frag = document.createDocumentFragment();
-    const els = S.view.map((r, i) => S.card(r, i));
-    els.forEach(e => frag.appendChild(e));
-    el('grid').innerHTML = ''; S.mosaic.reset(); el('grid').appendChild(frag);
-    S.mosaic.add(els);
+    el('grid').innerHTML = ''; S.mosaic.reset(); S.shown = 0;
+    S.renderNext(PER * 2);
+    S.moreUI();
   };
   if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && el('grid').offsetParent) S.loadMore(); }), { rootMargin: '900px' }).observe(el('sentinel'));
   el('moreBtn').addEventListener('click', () => S.loadMore());
@@ -2509,7 +2567,7 @@ function boot() {
   bind();
   rebuild();
   // If we already have a cached sheet, show it immediately (no skeleton)
-  libMosaic = new Mosaic($('#grid'));
+  libMosaic = new Mosaic($('#grid'), 250, () => renderGrid(gridItems));
   initSearches();
   renderEngines();
   renderDbCards();
