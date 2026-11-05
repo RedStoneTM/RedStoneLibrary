@@ -15,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Extra+Condensed:wght@700;800;900&family=Martian+Mono:wght@400;500;600&family=Noto+Sans+Armenian:wdth,wght@62.5..100,400..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght,SHRP@300..800,0..100&display=swap" rel="stylesheet">
 
-<!-- SheetJS — parses the Google Sheet / Excel / CSV directly in the browser -->
+<!-- SheetJS — parses Excel / CSV directly in the browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -275,23 +275,103 @@ button { cursor: pointer; }
 .fig__leader { position: absolute; right: 2%; top: 12%; font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
 .fig__leader::before { content: ""; width: 44px; height: 1px; background: var(--ink-3); transform: rotate(-18deg); transform-origin: right; }
 
-/* Specimen row: live counter + real numbers */
-.specimen { display: grid; grid-template-columns: 1.6fr repeat(5, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); margin-top: clamp(28px, 4vw, 48px); }
-.specimen > div { padding: 16px 16px 18px; border-left: 1px solid var(--line); min-width: 0; }
-.specimen > div:first-child { border-left: 0; padding-left: 0; }
-.specimen dt { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 8px; }
-.specimen dd { margin: 6px 0 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(28px, 3vw, 42px); line-height: 1; font-variant-numeric: tabular-nums; }
-.specimen dd.pixel { font-family: var(--f-pixel); font-weight: 400; font-size: clamp(22px, 2.5vw, 34px); color: var(--brand-ink); letter-spacing: .02em; perspective: 400px; white-space: nowrap; }
+/* The one number: every file in the library */
+.total { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); margin-top: clamp(28px, 4vw, 48px); padding: 18px 0 20px; }
+.total__label { display: flex; flex-direction: column; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.total__label b { color: var(--ink); font-weight: 500; display: flex; align-items: center; gap: 10px; }
+.total__n { font-family: var(--f-pixel); font-size: clamp(56px, 9vw, 128px); line-height: .9; color: var(--brand-ink); letter-spacing: .02em; perspective: 500px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.total__ruler { flex: 1; min-width: 120px; height: 10px; align-self: center; background: repeating-linear-gradient(to right, var(--line-2) 0 1px, transparent 1px 10px); }
 .live-dot { width: 7px; height: 7px; background: var(--brand); display: inline-block; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); animation: pulse 2.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .3; } }
-.lc { display: inline-block; min-width: .62em; text-align: center; }
+.lc { display: inline-block; min-width: .6em; text-align: center; }
 .lc-flip { animation: lcflip .5s var(--ease-form); }
 @keyframes lcflip { 0% { transform: rotateX(0); } 45% { transform: rotateX(90deg); color: var(--coral); } 55% { transform: rotateX(-90deg); color: var(--coral); } 100% { transform: rotateX(0); } }
-.sync { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-.sync[data-state="ok"] .sync__dot { background: #3E8E5E; }
-.sync[data-state="busy"] .sync__dot { background: var(--glint); animation: pulse 1s infinite; }
-.sync[data-state="err"] .sync__dot { background: var(--brand); }
-.sync__dot { width: 7px; height: 7px; background: var(--ink-3); }
+
+/* AI mark — anything made in ChatGPT carries a glint facet */
+.ai-mark {
+  position: relative; display: inline-flex; align-items: center; gap: 5px; overflow: hidden;
+  padding: 3px 9px 3px 6px; font-family: var(--f-pixel); font-size: 12px; line-height: 1.2; letter-spacing: .03em; color: #171A21;
+  background: linear-gradient(100deg, var(--glint), var(--artik) 55%, var(--coral));
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+.ai-mark svg { width: 11px; height: 11px; flex: none; animation: aiSpin 6s linear infinite; }
+.ai-mark::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.75) 50%, transparent 65%); background-size: 250% 100%; animation: glint 4s var(--ease-form) infinite; }
+@keyframes aiSpin { to { transform: rotate(360deg); } }
+.card--ai { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--glint) 55%, var(--line)); }
+.card--ai::before { background: linear-gradient(90deg, var(--glint), var(--coral)); }
+.card--ai .card__stamp { position: absolute; right: 16px; bottom: 44px; z-index: -1; pointer-events: none; font-family: var(--f-pixel); font-size: 76px; line-height: 1; color: var(--glint); opacity: .22; transition: opacity .3s, transform .6s var(--ease-settle); }
+.card--ai .card__stamp::after { content: "AI"; }
+.card--ai:hover .card__stamp { opacity: .4; transform: translateY(-4px); }
+.ai-note { margin-top: 16px; display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; font-size: 13px; color: var(--ink-2); background: color-mix(in srgb, var(--glint) 12%, var(--surface)); box-shadow: inset 3px 0 0 var(--glint); }
+.ai-note[hidden] { display: none; }
+
+/* Search engines panel */
+.engines { margin-top: 12px; padding: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); }
+.engines[hidden] { display: none; }
+.engines__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.engines__head p { margin: 0; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.engines__head p b { color: var(--brand-ink); font-weight: 600; }
+.engines__head div { display: flex; gap: 14px; }
+.eng-group { display: grid; grid-template-columns: 120px 1fr; gap: 8px 14px; padding: 10px 0; border-top: 1px solid var(--line); }
+.eng-group h5 { margin: 6px 0 0; font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+.eng-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.eng { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; border: 0; background: var(--surface-2); color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-variation-settings: var(--sharp); transition: background .2s, color .2s, box-shadow .2s; }
+.eng i { width: 8px; height: 8px; background: var(--line-2); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); transition: background .2s; }
+.eng[aria-pressed="true"] { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); background: var(--surface); }
+.eng[aria-pressed="true"] i { background: var(--ec); }
+.eng__n { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
+.eng[data-state="loading"] i { animation: pulse .8s infinite; }
+.eng[data-state="err"] .eng__n { color: var(--brand-ink); }
+.eng:hover { color: var(--ink); }
+.online__more { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 22px; }
+.online__more[hidden] { display: none; }
+.loader { display: flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.loader[hidden] { display: none; }
+.cites { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
+.db-note { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--steel); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--steel) 45%, transparent); padding: 3px 7px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-theme="dark"] .db-note { color: #9DB2CF; }
+.db-note i { width: 8px; height: 8px; flex: none; background: currentColor; clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%); }
+.card__dbn { margin: 12px 0 0; }
+.dbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; margin-top: 16px; }
+.db { --tint: var(--red-stone); position: relative; display: flex; flex-direction: column; padding: 16px 16px 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%); transition: transform .35s var(--ease-form), box-shadow .25s; }
+.db::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--tint); transition: width .4s var(--ease-form); }
+.db:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow); }
+.db:hover::before { width: 6px; }
+.db__top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.db__no { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); letter-spacing: .06em; }
+.db__acc { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; box-shadow: inset 0 0 0 1px currentColor; }
+.db__acc--free { color: #3E8E5E; }
+.db__acc--mixed { color: #B7832A; }
+.db__acc--sub { color: var(--brand-ink); }
+.db__live { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.db h3 { margin: 10px 0 0; font-variation-settings: var(--sharp); font-weight: 650; font-size: 17px; line-height: 1.2; }
+.db__cat { margin: 2px 0 0; font-family: var(--f-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.db__desc { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); flex: 1; }
+.db__foot { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.db-group { margin-top: 18px; }
+.db-group h5 { margin: 0; font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+.db-group .dbgrid { margin-top: 10px; }
+.tools--db { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr); }
+.engines--db { margin-top: 14px; }
+.dbc { --tint: var(--red-stone); position: relative; display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 12px 14px 12px 16px; border: 0; background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%); transition: background .2s, box-shadow .2s, opacity .3s, transform .3s var(--ease-form); }
+.dbc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--tint); }
+.dbc:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--line-2); }
+.dbc[aria-pressed="false"] { opacity: .5; }
+.dbc[aria-pressed="false"]::before { background: var(--line-2); }
+.dbc__top { display: flex; align-items: center; gap: 8px; }
+.dbc__top b { flex: 1; font-variation-settings: var(--sharp); font-weight: 650; font-size: 14px; }
+.dbc__sw { width: 26px; height: 14px; flex: none; background: var(--line-2); position: relative; transition: background .2s; }
+.dbc__sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; background: var(--surface); transition: transform .25s var(--ease-form); }
+.dbc[aria-pressed="true"] .dbc__sw { background: var(--tint); }
+.dbc[aria-pressed="true"] .dbc__sw::after { transform: translateX(12px); }
+.dbc__desc { font-size: 12px; line-height: 1.45; color: var(--ink-2); }
+.dbc[data-state="checking"] .eng__n::after { content: "ստուգվում է…"; }
+.dbc[data-state="checking"] { animation: pulse 1.2s infinite; }
+.dbc[data-state="loading"] .dbc__sw { animation: pulse .8s infinite; }
+.eng__db { font-family: var(--f-mono); font-size: 8.5px; letter-spacing: .06em; color: var(--steel); box-shadow: inset 0 0 0 1px currentColor; padding: 0 3px; }
+.db-tools { display: flex; gap: 10px; flex-wrap: wrap; }
+.db-tools .field { flex: 1; min-width: 240px; }
+.oa { font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; color: #3E8E5E; box-shadow: inset 0 0 0 1px currentColor; padding: 2px 6px; }
 
 /* ==================================================================
    SECTION HEADERS (strata)
@@ -571,12 +651,7 @@ button { cursor: pointer; }
    ================================================================== */
 @media (max-width: 1100px) {
   .hdr__tag { display: none; }
-  .specimen { grid-template-columns: repeat(3, 1fr); }
-  .specimen > div:first-child { grid-column: 1 / -1; padding-left: 0; border-bottom: 1px solid var(--line); }
-  .specimen > div:nth-child(2) { border-left: 0; padding-left: 0; }
-  .specimen > div:nth-child(5) { border-left: 0; padding-left: 0; }
-  .specimen > div:nth-child(n+5) { border-top: 1px solid var(--line); }
-  .tools { grid-template-columns: 1fr 1fr; }
+  .tools, .tools--db { grid-template-columns: 1fr 1fr; }
   .field--search { grid-column: 1 / -1; }
   .ftr__grid { grid-template-columns: 1fr 1fr; }
 }
@@ -598,11 +673,9 @@ button { cursor: pointer; }
   .logo img { width: 34px; height: 34px; }
   .logo__word { font-size: 18px; }
   .hdr__actions .btn--icon { width: 38px; height: 38px; }
-  .tools { grid-template-columns: 1fr; }
-  .specimen { grid-template-columns: 1fr 1fr; }
-  .specimen > div { border-left: 0 !important; padding-left: 0 !important; border-top: 1px solid var(--line); }
-  .specimen > div:first-child { border-top: 0; border-bottom: 0; }
-  .specimen > div:nth-child(3), .specimen > div:nth-child(5) { border-left: 1px solid var(--line) !important; padding-left: 14px !important; }
+  .tools, .tools--db { grid-template-columns: 1fr; }
+  .total__ruler { display: none; }
+  .eng-group { grid-template-columns: 1fr; }
   .st__head { grid-template-columns: 1fr; }
   .m-head { flex-direction: column; }
   .m-link { grid-template-columns: 1fr; }
@@ -648,6 +721,7 @@ button { cursor: pointer; }
     <nav class="hdr__nav" aria-label="Բաժիններ">
       <button type="button" data-tab="materials" aria-current="page"><span>01</span>Նյութեր</button>
       <button type="button" data-tab="domains"><span>02</span>Ոլորտներ</button>
+      <button type="button" data-tab="databases"><span>03</span>Բազաներ</button>
     </nav>
 
     <div class="hdr__actions">
@@ -687,18 +761,11 @@ button { cursor: pointer; }
       </figure>
     </div>
 
-    <dl class="specimen">
-      <div>
-        <dt><span class="live-dot" aria-hidden="true"></span>Հասանելի նյութեր ցանցում</dt>
-        <dd class="pixel" id="live-count" aria-live="off">0</dd>
-        <p class="sync" id="sync" data-state="idle" role="status"><span class="sync__dot"></span><span id="sync-text">Սինքրոնացում…</span></p>
-      </div>
-      <div><dt>Գրադարանում</dt><dd id="st-total">—</dd></div>
-      <div><dt>Գրքեր</dt><dd id="st-books">—</dd></div>
-      <div><dt>Նյութեր</dt><dd id="st-mats">—</dd></div>
-      <div><dt>Տեսադասեր</dt><dd id="st-vids">—</dd></div>
-      <div><dt>Ոլորտներ</dt><dd id="st-doms">—</dd></div>
-    </dl>
+    <div class="total">
+      <div class="total__label"><span>Σ · RedStoneLibrary</span><b><span class="live-dot" aria-hidden="true"></span>Ֆայլեր գրադարանում</b></div>
+      <span class="total__ruler" aria-hidden="true"></span>
+      <div class="total__n" id="total-n" aria-live="polite">0</div>
+    </div>
   </div>
 </section>
 
@@ -728,6 +795,7 @@ button { cursor: pointer; }
           <option value="նյութ">Ուսումնական նյութ</option>
           <option value="տեսանյութ">Տեսանյութ / Տեսադաս</option>
           <option value="հոդված">Հոդված / Article</option>
+          <option value="AI">✦ AI-ով ստեղծված (ChatGPT)</option>
         </select>
       </div>
       <div class="field">
@@ -743,7 +811,8 @@ button { cursor: pointer; }
     <div class="chips">
       <button type="button" class="btn btn--sm" id="cite-toggle" aria-expanded="false" aria-controls="cite-box"><i class="ic" data-ic="quote"></i>Ավելացնել մեջբերումով</button>
       <button type="button" class="btn btn--sm" id="import-btn"><i class="ic" data-ic="upload"></i>Ներմուծել</button>
-      <button type="button" class="btn btn--sm" id="resync-btn" title="Թարմացնել Google Sheet-ից"><i class="ic" data-ic="sync"></i>Թարմացնել</button>
+      <button type="button" class="btn btn--sm" id="resync-btn" title="Թարմացնել գրադարանը"><i class="ic" data-ic="sync"></i>Թարմացնել</button>
+      <button type="button" class="btn btn--sm" id="eng-toggle" aria-expanded="false" aria-controls="engines"><i class="ic" data-ic="globe"></i>Որոնողական համակարգեր <span class="eng__n" id="eng-badge">0</span></button>
       <span class="spacer"></span>
       <button type="button" class="btn btn--sm" id="only-bm" aria-pressed="false"><i class="ic" data-ic="bookmark"></i>Միայն պահպանվածները</button>
       <button type="button" class="btn btn--sm btn--ghost" id="reset" hidden><i class="ic" data-ic="x"></i>Մաքրել ֆիլտրերը</button>
@@ -753,6 +822,14 @@ button { cursor: pointer; }
       <p><label for="cite-input">Տեղադրեք մեջբերումը (կարող եք մի քանի տող)՝</label></p>
       <textarea id="cite-input" placeholder='Անհայտ. "Միջազգային գիտաժողովի նյութեր". Ոլորտ՝ Միջազգային տնտեսագիտություն. RedStoneLibrary, URL: https://doi.org/10.54503/978-9939-970-08-0'></textarea>
       <div class="row"><button type="button" class="btn btn--primary btn--sm" id="cite-add"><i class="ic" data-ic="plus"></i>Ավելացնել գրադարանում</button></div>
+    </div>
+
+    <div class="engines" id="engines" hidden>
+      <div class="engines__head">
+        <p>Ինտերնետային որոնում · <b id="eng-count">0</b> համակարգ միացված</p>
+        <div><button type="button" class="text-btn" data-eng="all">Բոլորը</button><button type="button" class="text-btn" data-eng="none">Ոչ մեկը</button></div>
+      </div>
+      <div id="eng-groups"></div>
     </div>
 
     <div class="grid" id="grid" aria-live="off"></div>
@@ -769,6 +846,43 @@ button { cursor: pointer; }
       <p class="divider" id="online-label"><i class="ic" data-ic="globe"></i>Ինտերնետից</p>
       <div class="online__status" id="online-status" hidden></div>
       <div class="grid" id="online-grid"></div>
+      <div id="online-sentinel" style="height:2px"></div>
+      <div class="online__more" id="online-more" hidden>
+        <p class="loader" id="online-loader" hidden><span class="spin"></span>Բեռնվում են ավելի շատ արդյունքներ…</p>
+        <button type="button" class="btn" id="online-more-btn"><i class="ic" data-ic="arrow-down"></i>Ավելին ինտերնետից</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ DATABASES -->
+<section class="st" id="databases-view" data-view="databases" hidden>
+  <div class="wrap">
+    <header class="st__head">
+      <p class="st__idx"><b>03</b><span>Տվյալների բազաներ</span><span>Որոնում կայքում</span></p>
+      <h2 class="st__title reveal"><span id="db-total">15</span> բազա։ <span class="red">Մեկ որոնում։</span></h2>
+      <p class="found">Արդյունքները բեռնվում են հենց այստեղ</p>
+    </header>
+    <div class="tools tools--db" role="search">
+      <div class="field field--search"><i class="ic" data-ic="search"></i><input class="input" type="search" id="db-q" placeholder="Որոնել բոլոր բազաներում միաժամանակ…" autocomplete="off" aria-label="Որոնում տվյալների բազաներում"></div>
+      <div class="field"><label for="db-type">Ձևաչափ</label>
+        <select class="select" id="db-type"><option value="ALL">Բոլոր ձևաչափերը</option><option value="հոդված">Հոդված</option><option value="գիրք">Գիրք</option><option value="նյութ">Տվյալներ / նյութ</option></select></div>
+      <div class="field"><label for="db-sort">Դասավորել</label>
+        <select class="select" id="db-sort"><option value="NEWEST">Ըստ համապատասխանության</option><option value="RATING_DESC">Ըստ մեջբերումների</option><option value="TITLE_ASC">Անվանումով (Ա–Ֆ)</option></select></div>
+    </div>
+    <div class="engines engines--db">
+      <div class="engines__head"><p>Որոնելի բազաներ · <b id="db-count">0</b> միացված</p><div><button type="button" class="text-btn" data-dball="all">Բոլորը</button><button type="button" class="text-btn" data-dball="none">Ոչ մեկը</button></div></div>
+      <div id="db-cards"></div>
+    </div>
+    <div class="online">
+      <p class="divider" id="db-label"><i class="ic" data-ic="layers"></i>Տվյալների բազաներից</p>
+      <div class="online__status" id="db-status" hidden></div>
+      <div class="grid" id="db-grid"></div>
+      <div id="db-sentinel" style="height:2px"></div>
+      <div class="online__more" id="db-more" hidden>
+        <p class="loader" id="db-loader" hidden><span class="spin"></span>Բեռնվում են ավելի շատ արդյունքներ…</p>
+        <button type="button" class="btn" id="db-more-btn"><i class="ic" data-ic="arrow-down"></i>Ավելին բազաներից</button>
+      </div>
     </div>
   </div>
 </section>
@@ -796,7 +910,7 @@ button { cursor: pointer; }
     </div>
     <div class="ftr__grid">
       <div><h5>Կազմակերպություն</h5><p>«RED STONE TEAM» հասարակական կազմակերպություն</p><p>Երևան · 40.18° N · 44.51° E</p></div>
-      <div><h5>Ռեսուրսներ</h5><ul><li>Proton Drive · YouTube</li><li>Open Library · Google Books</li><li>Crossref · Open Academic Resources</li></ul></div>
+      <div><h5>Ռեսուրսներ</h5><ul><li>Proton Drive · YouTube</li><li>OpenAlex · arXiv · Crossref · Europe PMC</li><li>Open Library · Internet Archive · Gutenberg</li><li>24 որոնողական համակարգ · 15 որոնելի տվյալների բազա</li></ul></div>
       <div><h5>Ստեղծողներ</h5><p>Created by <b style="color:var(--tuff-white)">RED STONE TEAM</b></p><p>F. Khangeldyan · M. Israyelyan · D. Yervandyan</p></div>
       <div><h5>Կապ</h5><ul><li><a href="https://github.com/RedStoneTM/RedStoneTeam" target="_blank" rel="noopener noreferrer">GitHub · RedStoneTM</a></li><li><a href="https://docs.google.com/forms/d/e/1FAIpQLSdqnjeEFBkkXRT8kcM7_ZGhayedY5Qdl-fMjFtRCB7-2ceQXQ/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">Առաջարկել ռեսուրս</a></li></ul></div>
     </div>
@@ -827,6 +941,8 @@ button { cursor: pointer; }
         <a class="btn btn--primary" id="m-open" href="#" target="_blank" rel="noopener noreferrer">Բացել <i class="ic" data-ic="arrow-ur"></i></a>
         <div class="m-url"><i class="ic" data-ic="link"></i><span id="m-url"></span><button type="button" class="icon-btn" id="m-copy-link" aria-label="Պատճենել հղումը"><i class="ic" data-ic="copy"></i></button></div>
       </div>
+      <div class="ai-note" id="m-ai" hidden><span class="ai-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg>AI</span><span>Այս նյութը ստեղծված է ChatGPT-ի միջոցով։ Օգտագործելուց առաջ ստուգեք փաստերը և աղբյուրները։</span></div>
+      <div class="ai-note" id="m-db" hidden style="box-shadow: inset 3px 0 0 var(--steel); background: color-mix(in srgb, var(--steel) 10%, var(--surface))"><span class="db-note"><i></i>Տվյալների բազայի մաս</span><span id="m-db-text"></span></div>
       <div class="m-sec"><h4>Նկարագրություն</h4><p class="m-desc" id="m-desc"></p></div>
       <div class="m-sec" id="m-tags-sec"><h4>Բանալի բառեր</h4><div class="tags" id="m-tags"></div></div>
       <div class="m-sec" id="m-extra-sec"><h4>Լրացուցիչ տվյալներ</h4><dl class="kv" id="m-extra"></dl></div>
@@ -848,12 +964,12 @@ button { cursor: pointer; }
         <h4>Ընտրեք կամ քաշեք .xlsx, .xls կամ .csv ֆայլը</h4>
         <p>Սյունակները ճանաչվում են ավտոմատ՝ Վերնագիր, Հեղինակ, Հղում, Ոլորտ, Տեսակ, Նկարագրություն, Թեգեր…</p>
       </label>
-      <p class="divider or">կամ Google Sheets / Drive հղումով</p>
+      <p class="divider or">կամ աղյուսակի հղումով</p>
       <div class="url-row">
-        <input class="input" type="url" id="url-in" aria-label="Google Sheets հղում">
+        <input class="input" type="url" id="url-in" placeholder="https://…  (.xlsx / .csv)" aria-label="Աղյուսակի հղում">
         <button type="button" class="btn btn--primary" id="url-go">Ներբեռնել</button>
       </div>
-      <p class="hint">Ֆայլը պետք է լինի «Anyone with the link can view» հասանելիությամբ։ Ձեր ներմուծածը պահվում է այս բրաուզերում։</p>
+      <p class="hint">Հղումը պետք է լինի հանրային (բոլորը կարող են դիտել)։ Ձեր ներմուծածը պահվում է այս բրաուզերում։</p>
       <div class="status" id="imp-status" hidden></div>
     </div>
   </div>
@@ -884,16 +1000,15 @@ button { cursor: pointer; }
 /* ==================================================================
    CONFIG
    ================================================================== */
-const SHEET_ID = '1g_lcrldXSjYyilbN6xUUDC6POFCQRFlz';
-const SHEET_EDIT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
-// Tried in order — the first one that answers with parseable data wins.
-const SHEET_URLS = [
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`,
-  `https://drive.google.com/uc?export=download&id=${SHEET_ID}`
+const LIB_ID = '1g_lcrldXSjYyilbN6xUUDC6POFCQRFlz';
+// Library source endpoints, tried in order — the first that answers with parseable data wins.
+const LIB_URLS = [
+  `https://docs.google.com/spreadsheets/d/${LIB_ID}/export?format=xlsx`,
+  `https://docs.google.com/spreadsheets/d/${LIB_ID}/gviz/tq?tqx=out:csv`,
+  `https://docs.google.com/spreadsheets/d/${LIB_ID}/export?format=csv`,
+  `https://drive.google.com/uc?export=download&id=${LIB_ID}`
 ];
-const K = { user: 'rsl_user_items', sheet: 'rsl_sheet_cache', bm: 'rsl_bookmarks', theme: 'rsl_theme' };
+const K = { user: 'rsl_user_items', sheet: 'rsl_sheet_cache', bm: 'rsl_bookmarks', theme: 'rsl_theme', eng: 'rsl_engines', dbeng: 'rsl_db_engines', unav: 'rsl_unavailable', probe: 'rsl_db_probe' };
 const STONE = 'https://cdn.jsdelivr.net/gh/RedStoneTM/RedStoneTeam@main/logorightcolores.png';
 
 /* ==================================================================
@@ -918,6 +1033,7 @@ const ICONS = {
   check: 'M5 12l5 5 9-10',
   upload: 'M12 16V4M6 10l6-6 6 6M4 20h16',
   sync: 'M20 4v5h-5 M4 20v-5h5 M20 9l-3-5H7L4 9 M4 15l3 5h10l3-5',
+  layers: 'M12 3l9 5-9 5-9-5z M3 13l9 5 9-5',
   link: 'M10 14l4-4 M9 7l2-2h4l4 4v4l-2 2 M15 17l-2 2H9l-4-4v-4l2-2',
   moon: 'M14 3L8 5 4 11l2 7 7 3 7-4-7-3-2-6z',
   sun: 'M12 7l5 5-5 5-5-5z M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4'
@@ -976,6 +1092,9 @@ function normalizeType(raw) {
 }
 const isYouTube = l => /youtube\.com|youtu\.be/i.test(String(l || ''));
 const canonicalType = (link, type) => isYouTube(link) ? 'տեսանյութ' : normalizeType(type);
+const isAI = l => /chatgpt\.com|chat\.openai\.com/i.test(String(l || ''));
+const AI_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg>';
+const aiMark = () => `<span class="ai-mark" title="Ստեղծված է ChatGPT-ով">${AI_SVG}AI · ChatGPT</span>`;
 function typeBadge(t) { const d = TYPES[t] || TYPES['նյութ']; return `<span class="type" style="--tc:${d.color}"><i></i>${esc(d.label)}</span>`; }
 
 /* ==================================================================
@@ -1044,7 +1163,7 @@ const BASE = [
    STATE
    ================================================================== */
 let userItems = load(K.user, []);       // added from web / citation / own file imports
-let sheetCache = load(K.sheet, null);   // { ts, items } — last good copy of the Google Sheet
+let sheetCache = load(K.sheet, null);   // { ts, items } — last good copy of the library source
 let bookmarks = load(K.bm, []);
 let materials = [];
 let current = null;                     // item open in the modal
@@ -1066,7 +1185,7 @@ function rebuild() {
 }
 
 /* ==================================================================
-   SHEET PARSING — flexible column names, real hyperlinks recovered
+   LIBRARY PARSING — flexible column names, real hyperlinks recovered
    ================================================================== */
 const COLS = {
   title: ['վերնագիր', 'անվանում', 'անուն', 'title', 'name', 'название', 'наименование'],
@@ -1170,42 +1289,31 @@ async function fetchSheet(urls) {
   throw lastErr || new Error('Չհաջողվեց ներբեռնել');
 }
 
-function setSync(state, text) {
-  const el = $('#sync');
-  el.dataset.state = state;
-  $('#sync-text').textContent = text;
-}
-function timeStr(ts) { const d = new Date(ts); return d.toLocaleDateString('hy-AM', { day: '2-digit', month: '2-digit' }) + ' · ' + d.toLocaleTimeString('hy-AM', { hour: '2-digit', minute: '2-digit' }); }
-
 let syncing = false;
-async function syncSheet(loud) {
+async function syncLibrary(loud) {
   if (syncing) return;
   syncing = true;
-  setSync('busy', 'Սինքրոնացվում է Google Sheet-ից…');
   try {
-    const { rows, links } = await fetchSheet(SHEET_URLS);
+    const { rows, links } = await fetchSheet(LIB_URLS);
     const { items, skipped } = rowsToItems(rows, links, 'RSL-S-');
-    if (!items.length) throw new Error(`Ոչ մի տող չճանաչվեց (${skipped} տող առանց «Վերնագիր»/«Title»)`);
-    items.reverse(); // newest rows (bottom of the sheet) first
+    if (!items.length) throw new Error(`No rows recognised (${skipped} without a title)`);
+    items.reverse(); // newest rows first
     sheetCache = { ts: Date.now(), items };
     store(K.sheet, sheetCache);
     gridLoading = false;
     rebuild(); refreshAll();
-    setSync('ok', `Google Sheet · ${items.length} տող · ${timeStr(sheetCache.ts)}`);
-    if (loud) toast(`Սինքրոնացվեց՝ ${items.length} նյութ`);
+    if (loud) toast(`Գրադարանը թարմացվեց · ${fmt(items.length)} նյութ`);
   } catch (err) {
-    console.warn('Sheet sync:', err);
-    if (sheetCache && sheetCache.items && sheetCache.items.length) setSync('err', `Օֆլայն · պահված պատճեն ${timeStr(sheetCache.ts)}`);
-    else setSync('err', 'Sheet-ը հասանելի չէ · ցուցադրվում է հիմնական հավաքածուն');
-    if (loud) toast('Google Sheet-ը հասանելի չէ — ստուգեք «Anyone with the link» հասանելիությունը');
+    console.warn('Library sync:', err);
+    if (loud) toast('Չհաջողվեց թարմացնել — ցուցադրվում է պահված տարբերակը');
     gridLoading = false;
-    rebuild(); refreshAll();   // cached sheet if we have one, otherwise the built-in set
+    rebuild(); refreshAll();   // cached copy if we have one, otherwise the built-in set
   } finally {
     syncing = false;
   }
 }
 
-/* Manual imports (own file / another sheet) are kept as the user's own items */
+/* Manual imports are kept as the user's own items */
 function importItems(rows, links) {
   const { items, skipped } = rowsToItems(rows, links, 'RSL-IMP-');
   const ids = new Set(items.map(i => i.id));
@@ -1216,38 +1324,29 @@ function importItems(rows, links) {
 }
 
 /* ==================================================================
-   LIVE COUNTER — tied to the real clock, now slower and calmer
+   THE ONE NUMBER — every file in the library, with flipping digits
    ================================================================== */
-const COUNTER_START = 203123234;
-const COUNTER_ANCHOR = Date.UTC(2026, 8, 8);
-const COUNTER_RATE = 0.12;             // files per real second (was 1.5)
-let liveCount = 0;
-const timeValue = () => COUNTER_START + Math.floor(Math.max(0, Date.now() - COUNTER_ANCHOR) / 1000 * COUNTER_RATE);
-function renderCount() {
-  const el = $('#live-count');
-  const s = fmt(liveCount);
-  if (el.children.length !== s.length) { el.innerHTML = s.split('').map(c => `<span class="lc">${c}</span>`).join(''); return; }
-  for (let i = 0; i < s.length; i++) {
+let totalShown = 0, totalTarget = 0, totalRaf = 0, introDone = false;
+function renderTotal(n) {
+  const el = $('#total-n');
+  const str = fmt(n);
+  if (el.children.length !== str.length) { el.innerHTML = str.split('').map(c => `<span class="lc">${c}</span>`).join(''); return; }
+  for (let i = 0; i < str.length; i++) {
     const c = el.children[i];
-    if (c.textContent !== s[i]) { c.textContent = s[i]; c.classList.remove('lc-flip'); void c.offsetWidth; c.classList.add('lc-flip'); }
+    if (c.textContent !== str[i]) { c.textContent = str[i]; c.classList.remove('lc-flip'); void c.offsetWidth; c.classList.add('lc-flip'); }
   }
 }
-function startCounter() {
-  const target = timeValue();
-  const from = target - 480;
-  const t0 = performance.now();
-  (function rollIn(now) {           // short count-up when the page opens
-    const p = Math.min(1, (now - t0) / 1600);
-    liveCount = Math.floor(from + (target - from) * (1 - Math.pow(1 - p, 3)));
-    renderCount();
-    if (p < 1) requestAnimationFrame(rollIn); else tick();
+function animateTotal(n) {
+  totalTarget = n;
+  if (!introDone) return;
+  cancelAnimationFrame(totalRaf);
+  const from = totalShown, t0 = performance.now(), dur = Math.min(1600, 500 + Math.abs(n - from) * 10);
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / dur);
+    totalShown = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3)));
+    renderTotal(totalShown);
+    if (k < 1) totalRaf = requestAnimationFrame(step);
   })(t0);
-  function tick() {
-    const t = timeValue();
-    if (t > liveCount) liveCount = t;
-    renderCount();
-    setTimeout(tick, 3000 + Math.random() * 4000); // 3–7 s between steps
-  }
 }
 
 /* ==================================================================
@@ -1272,21 +1371,13 @@ function populateDomainSelect() {
   ui.domain = sel.value;
 }
 
-function updateStats() {
-  const c = t => materials.filter(m => m.type === t).length;
-  const counts = countsByDomain();
-  $('#st-total').textContent = fmt(materials.length);
-  $('#st-books').textContent = fmt(c('գիրք'));
-  $('#st-mats').textContent = fmt(c('նյութ') + c('հոդված'));
-  $('#st-vids').textContent = fmt(c('տեսանյութ'));
-  $('#st-doms').textContent = fmt(DOMAINS.filter(d => counts.get(d.title)).length);
-}
+function updateStats() { animateTotal(materials.length); }
 
 function filtered() {
   const q = ui.q;
   let list = materials.filter(m => {
     const hay = !q || [m.title, m.author, m.description, m.domain, ...(m.tags || [])].some(v => String(v || '').toLowerCase().includes(q));
-    return hay && (ui.domain === 'ALL' || m.domain === ui.domain) && (ui.type === 'ALL' || m.type === ui.type) && (!ui.onlyBm || bookmarks.includes(m.id));
+    return hay && (ui.domain === 'ALL' || m.domain === ui.domain) && (ui.type === 'ALL' || (ui.type === 'AI' ? isAI(m.link) : m.type === ui.type)) && (!ui.onlyBm || bookmarks.includes(m.id));
   });
   if (ui.sort === 'TITLE_ASC') list = list.slice().sort((a, b) => a.title.localeCompare(b.title, 'hy'));
   else if (ui.sort === 'RATING_DESC') list = list.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -1319,32 +1410,35 @@ function cardHTML(item, i, opts) {
   if (opts.web) {
     acts = opts.saved
       ? `<span class="icon-btn ok" title="Պահպանված է"><i class="ic">${ic('check')}</i></span>`
-      : `<button type="button" class="icon-btn" data-act="save-web" data-i="${i}" title="Պահպանել գրադարանում" aria-label="Պահպանել գրադարանում"><i class="ic">${ic('plus')}</i></button>`;
+      : `<button type="button" class="icon-btn" data-act="save-web" data-i="${i}" data-src="${opts.src || 'lib'}" title="Պահպանել գրադարանում" aria-label="Պահպանել գրադարանում"><i class="ic">${ic('plus')}</i></button>`;
   } else {
     if (item.origin === 'web' || item.origin === 'cite' || item.origin === 'import')
       acts += `<button type="button" class="icon-btn" data-act="del" data-id="${esc(item.id)}" title="Ջնջել" aria-label="Ջնջել"><i class="ic">${ic('trash')}</i></button>`;
     acts += `<button type="button" class="icon-btn${bm ? ' on' : ''}" data-act="bm" data-id="${esc(item.id)}" aria-pressed="${bm}" aria-label="Պահպանել"><i class="ic">${bm ? ic('bookmark').replace('fill="none"', 'fill="currentColor"') : ic('bookmark')}</i></button>`;
   }
   const meta = opts.web ? `${esc(item.author || 'Անհայտ')}${item.year ? ' · ' + esc(item.year) : ''}` : esc(item.author || 'Անհայտ');
+  const ai = isAI(item.link);
+  const extras = (ai ? aiMark() : '') + (opts.web && item.oa ? '<span class="oa">OPEN</span>' : '') + (opts.web && item.cites ? `<span class="cites">${fmt(item.cites)} մեջբ.</span>` : '');
   return `
     <div class="card__shard" aria-hidden="true" style="--rot:${(stableHashNum(item.id) % 72) - 36}deg"></div>
     <div class="card__acts">${acts}</div>
     <div class="card__body">
-      <div class="card__top"><span class="card__no">${no}</span>${typeBadge(item.type)}${opts.web ? `<span class="web-tag"><i class="ic">${ic('globe')}</i>${esc(item.source)}</span>` : ''}</div>
+      <div class="card__top"><span class="card__no">${no}</span>${typeBadge(item.type)}${opts.web ? `<span class="web-tag"><i class="ic">${ic('globe')}</i>${esc(item.source)}</span>` : ''}${extras}</div>
       <h3 class="card__title">${esc(item.title)}</h3>
       <p class="card__author"><i class="ic">${ic('user')}</i><span>${meta}</span></p>
       ${item.description ? `<p class="card__desc">${esc(item.description)}</p>` : ''}
+      ${dbOfItem(item) ? `<p class="card__dbn">${dbNote(dbOfItem(item))}</p>` : ''}
     </div>
     <div class="card__foot">
       <span class="area"><i></i><span>${esc(opts.web ? (item.source || 'Web') : item.domain)}</span></span>
       <a class="open-link" href="${esc(safeUrl(item.link))}" target="_blank" rel="noopener noreferrer" data-act="link">Բացել<i class="ic">${ic('arrow-ur')}</i></a>
-    </div>`;
+    </div>${ai ? '<span class="card__stamp" aria-hidden="true"></span>' : ''}`;
 }
 
 function buildCard(item, i) {
   const el = document.createElement('article');
   const span = spanFor(item, i);
-  el.className = `card card-in ${span}`;
+  el.className = `card card-in ${span}${isAI(item.link) ? ' card--ai' : ''}`;
   el.style.setProperty('--tint', tintOf(item.domain));
   el.style.animationDelay = Math.min((i % BATCH) * 45, 500) + 'ms';
   el.tabIndex = 0;
@@ -1416,23 +1510,36 @@ function switchTab(tab) {
   document.querySelectorAll('.hdr__nav button').forEach(b => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   $('#library').hidden = tab !== 'materials';
   $('#domains-view').hidden = tab !== 'domains';
+  $('#databases-view').hidden = tab !== 'databases';
+  if (tab === 'databases') { if (!$('#db-q').value && ui.q) $('#db-q').value = ui.q; renderDbCards(); probeDatabases(); }
+  DBS.update();
   if (tab === 'domains') renderDomains();
   observeReveals();
-  const target = tab === 'domains' ? $('#domains-view') : $('#library');
+  const target = tab === 'domains' ? $('#domains-view') : tab === 'databases' ? $('#databases-view') : $('#library');
   window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
 }
 
 /* ==================================================================
    DETAIL MODAL
    ================================================================== */
-function formatCitation(it) { return `${it.author || 'Անհայտ'}. "${it.title}". Ոլորտ՝ ${it.domain}. RedStoneLibrary, URL: ${it.link}`; }
+function formatCitation(it) { const db = dbOfItem(it); return `${it.author || 'Անհայտ'}. "${it.title}". Ոլորտ՝ ${it.domain}.${db ? ` ${DB_NOTE}՝ ${db}.` : ''} RedStoneLibrary, URL: ${it.link}`; }
 let lastFocus = null;
 function openScrim(id) { lastFocus = document.activeElement; const s = $('#' + id); s.hidden = false; document.body.classList.add('no-scroll'); setTimeout(() => { const f = s.querySelector('[data-close]'); f && f.focus(); }, 30); }
 function closeScrim(id) { $('#' + id).hidden = true; if (!document.querySelector('.scrim:not([hidden])')) document.body.classList.remove('no-scroll'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
 
-function openDetail(id) {
-  const it = materials.find(m => m.id === id);
-  if (!it) return;
+let currentWeb = null;   // index into onlineView when the modal shows an internet result
+function openDetail(id, webIndex, src) {
+  let it;
+  if (webIndex != null) {
+    const r = (searches[src || 'lib'] || {}).view ? searches[src || 'lib'].view[webIndex] : null;
+    if (!r) return;
+    it = { ...r, id: webId(r), domain: r.source, tags: [], extra: Object.assign({ 'Որոնողական համակարգ': r.source }, r.db ? { 'Տվյալների բազա': r.db } : {}, r.year ? { 'Տարի': String(r.year) } : {}, r.cites ? { 'Մեջբերումներ': fmt(r.cites) } : {}, r.oa ? { 'Բաց հասանելիություն': 'Այո' } : {}) };
+    currentWeb = { i: webIndex, src: src || 'lib' };
+  } else {
+    it = materials.find(m => m.id === id);
+    if (!it) return;
+    currentWeb = null;
+  }
   current = it;
   const tint = tintOf(it.domain);
   $('#m-bar').style.background = tint;
@@ -1455,12 +1562,23 @@ function openDetail(id) {
   $('#m-extra-sec').hidden = !keys.length;
   $('#m-extra').innerHTML = keys.map(k => { const v = String(ex[k]); const link = /^https?:\/\//i.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>` : esc(v); return `<dt>${esc(k)}</dt><dd>${link}</dd>`; }).join('');
   $('#m-cite').textContent = formatCitation(it);
+  $('#m-ai').hidden = !isAI(it.link);
+  const dbn = dbOfItem(it);
+  $('#m-db').hidden = !dbn;
+  $('#m-db-text').textContent = dbn ? `Այս ֆայլը ${dbn} տվյալների բազայի մաս է։ Մուտքը կարող է պահանջել գրանցում կամ բաժանորդագրություն։` : '';
   paintModalBm();
   openScrim('detail');
 }
 function paintModalBm() {
-  const on = current && bookmarks.includes(current.id);
   const b = $('#m-bm');
+  if (currentWeb != null) {
+    const saved = !!current && materials.some(m => m.id === current.id);
+    b.classList.toggle('on', saved); b.setAttribute('aria-label', saved ? 'Պահպանված է' : 'Պահպանել գրադարանում');
+    b.innerHTML = `<i class="ic">${ic(saved ? 'check' : 'plus')}</i>`;
+    return;
+  }
+  b.setAttribute('aria-label', 'Պահպանել');
+  const on = current && bookmarks.includes(current.id);
   b.classList.toggle('on', !!on);
   b.setAttribute('aria-pressed', !!on);
   b.innerHTML = `<i class="ic">${on ? ic('bookmark').replace('fill="none"', 'fill="currentColor"') : ic('bookmark')}</i>`;
@@ -1500,7 +1618,7 @@ function paintBookmarks() {
   if (!live.length) { list.innerHTML = `<div class="empty"><div class="empty__glyph" aria-hidden="true">◇</div><p>Դեռևս չունեք պահպանված նյութեր։<br>Սեղմեք <b>էջանիշը</b> քարտի վրա։</p></div>`; return; }
   list.innerHTML = live.map(id => {
     const it = materials.find(m => m.id === id);
-    return `<div class="bm" data-act="bm-open" data-id="${esc(id)}" style="--tint:${tintOf(it.domain)}" tabindex="0"><div><h4>${esc(it.title)}</h4><p>${esc(it.author || 'Անհայտ')} · ${esc((TYPES[it.type] || {}).label || '')}</p></div><button type="button" class="icon-btn" data-act="bm" data-id="${esc(id)}" aria-label="Հեռացնել"><i class="ic">${ic('trash')}</i></button></div>`;
+    return `<div class="bm" data-act="bm-open" data-id="${esc(id)}" style="--tint:${tintOf(it.domain)}" tabindex="0"><div><h4>${esc(it.title)}</h4><p>${isAI(it.link) ? '✦ AI · ' : ''}${esc(it.author || 'Անհայտ')} · ${esc((TYPES[it.type] || {}).label || '')}</p></div><button type="button" class="icon-btn" data-act="bm" data-id="${esc(id)}" aria-label="Հեռացնել"><i class="ic">${ic('trash')}</i></button></div>`;
   }).join('');
 }
 function toggleDrawer(open) {
@@ -1522,7 +1640,7 @@ function deleteItem(id) {
   const b = bookmarks.indexOf(id); if (b > -1) { bookmarks.splice(b, 1); store(K.bm, bookmarks); }
   if (current && current.id === id) closeScrim('detail');
   rebuild(); refreshAll();
-  if (onlineView.length) renderOnline();
+  Object.values(searches).forEach(S => { if (S.view.length) S.rerender(); });
   toast('Ռեսուրսը ջնջվեց');
 }
 
@@ -1554,104 +1672,417 @@ function addByCitation() {
 }
 
 /* ==================================================================
-   ONLINE DISCOVER — Open Library · Google Books · Crossref
+   ONLINE SEARCH — 24 open engines, 15 of them research databases
    ================================================================== */
-let onlineResults = [], onlineView = [], lastSig = '', pendingSig = '', onlineTimer = null;
+const PER = 20;
+const enc = encodeURIComponent;
+function timed(ms) { if (window.AbortSignal && AbortSignal.timeout) return AbortSignal.timeout(ms); const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
+async function getJSON(url) { const r = await fetch(url, { signal: timed(15000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function getText(url) { const r = await fetch(url, { signal: timed(15000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }
+const decodeHTML = s => { const t = document.createElement('textarea'); t.innerHTML = String(s == null ? '' : s); return t.value; };
+const clean = (s, n) => { const t = decodeHTML(stripTags(s)); n = n || 260; return t.length > n ? t.slice(0, n).trim() + '…' : t; };
+const first = v => Array.isArray(v) ? v[0] : v;
+const names = arr => (Array.isArray(arr) ? arr : arr ? [arr] : []).map(x => typeof x === 'string' ? x : (x && (x.name || x.text || x.display_name || [x.given, x.family].filter(Boolean).join(' '))) || '').filter(Boolean).slice(0, 3).map(decodeHTML).join(', ') || 'Անհայտ';
+const yearOf = v => { const m = String(v == null ? '' : v).match(/\d{4}/); return m ? m[0] : ''; };
+const qLang = q => /[Ա-֏]/.test(q) ? 'hy' : /[Ѐ-ӿ]/.test(q) ? 'ru' : 'en';
+function invAbstract(inv) { if (!inv) return ''; const w = []; Object.keys(inv).forEach(k => inv[k].forEach(i => { w[i] = k; })); return w.join(' '); }
+const abs = u => { u = String(u || ''); return u.startsWith('//') ? 'https:' + u : httpsify(u); };
 
-async function fetchOpenLibrary(q) {
-  const r = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=12&fields=key,title,author_name,first_publish_year,cover_i,ia,subject`);
-  if (!r.ok) throw new Error('Open Library');
-  const d = await r.json();
-  return (d.docs || []).map(x => ({ title: x.title, author: (x.author_name || []).slice(0, 3).join(', ') || 'Անհայտ', year: x.first_publish_year || '', source: 'Open Library', type: 'գիրք', link: (x.ia && x.ia.length) ? 'https://archive.org/details/' + x.ia[0] : 'https://openlibrary.org' + x.key, cover: x.cover_i ? `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg` : '', description: (x.subject || []).slice(0, 6).join(', ') }));
+async function wikiSearch(host, q, p, type) {
+  const d = await getJSON(`https://${host}/w/api.php?action=query&list=search&srsearch=${enc(q)}&srlimit=${PER}&sroffset=${p * PER}&format=json&origin=*`);
+  return ((d.query && d.query.search) || []).map(x => ({ title: x.title, author: host.split('.').slice(-2, -1)[0] === 'wikibooks' ? 'Wikibooks' : 'Wikipedia', year: yearOf(x.timestamp), type, link: `https://${host}/wiki/${enc(x.title.replace(/ /g, '_'))}`, description: clean(x.snippet), oa: true }));
 }
-async function fetchGoogleBooks(q) {
-  const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=12`);
-  if (!r.ok) throw new Error('Google Books');
-  const d = await r.json();
-  return (d.items || []).map(it => { const v = it.volumeInfo || {}; return { title: v.title, author: (v.authors || []).slice(0, 3).join(', ') || 'Անհայտ', year: (v.publishedDate || '').slice(0, 4), source: 'Google Books', type: 'գիրք', link: v.canonicalVolumeLink || v.infoLink || v.previewLink || '#', cover: v.imageLinks ? httpsify(v.imageLinks.thumbnail || v.imageLinks.smallThumbnail) : '', description: stripTags(v.description).slice(0, 260) || (v.categories || []).join(', ') }; });
-}
-async function fetchCrossref(q) {
-  const r = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(q)}&rows=12&select=DOI,title,author,issued,container-title,abstract,URL`);
-  if (!r.ok) throw new Error('Crossref');
-  const d = await r.json();
-  return ((d.message && d.message.items) || []).map(it => ({ title: (it.title && it.title[0]) || '', author: (it.author ? it.author.slice(0, 3).map(a => [a.given, a.family].filter(Boolean).join(' ')).join(', ') : '') || 'Անհայտ', year: it.issued && it.issued['date-parts'] && it.issued['date-parts'][0] ? it.issued['date-parts'][0][0] : '', source: 'Crossref', type: 'հոդված', link: it.URL || 'https://doi.org/' + it.DOI, cover: '', description: ((it['container-title'] && it['container-title'][0]) ? it['container-title'][0] + '. ' : '') + stripTags(it.abstract).slice(0, 220) }));
+function seSite() {
+  const d = domainOf(ui.domain);
+  const code = d && d.code;
+  if (['ALG', 'ANL', 'OPR'].includes(code)) return 'math';
+  if (['MIC', 'MAC', 'WLD', 'FIN', 'SRV', 'MGT', 'PRD'].includes(code)) return code === 'FIN' ? 'quant' : 'economics';
+  if (code === 'PSY') return 'cogsci';
+  if (code === 'ITC') return 'stackoverflow';
+  return 'math';
 }
 
-function setOnlineStatus(html) { const b = $('#online-status'); b.innerHTML = html || ''; b.hidden = !html; }
-function updateOnline() {
-  const block = $('#online');
-  const q = ui.q.trim();
-  if (ui.onlyBm || q.length < 3) {
-    block.hidden = true; $('#online-grid').innerHTML = ''; setOnlineStatus('');
-    onlineResults = []; onlineView = []; lastSig = ''; pendingSig = ''; clearTimeout(onlineTimer);
-    return;
-  }
-  block.hidden = false;
-  if (ui.type === 'նյութ' || ui.type === 'տեսանյութ') {
-    $('#online-grid').innerHTML = ''; onlineResults = []; onlineView = []; lastSig = 'skip';
-    setOnlineStatus('Այս ձևաչափով ինտերնետից արդյունքներ չկան։');
-    return;
-  }
-  const sig = q + '|' + ui.domain + '|' + ui.type;
-  if (sig !== lastSig && sig !== pendingSig) {
-    pendingSig = sig;
-    $('#online-grid').innerHTML = ''; onlineResults = [];
-    setOnlineStatus(`<span class="spin"></span>Փնտրում ենք ինտերնետում «${esc(q)}»…`);
-    clearTimeout(onlineTimer);
-    onlineTimer = setTimeout(() => runOnline(q, ui.domain, ui.type, sig), 650);
-  } else if (sig === lastSig && onlineResults.length) renderOnline();
+const ENGINES = [
+  /* ---------- Books ---------- */
+  { id: 'openlibrary', name: 'Open Library', group: 'books', types: ['գիրք'], async run(q, p) {
+    const d = await getJSON(`https://openlibrary.org/search.json?q=${enc(q)}&limit=${PER}&page=${p + 1}&fields=key,title,author_name,first_publish_year,cover_i,ia,subject`);
+    return (d.docs || []).map(x => ({ title: x.title, author: names(x.author_name), year: x.first_publish_year || '', type: 'գիրք', link: (x.ia && x.ia.length) ? 'https://archive.org/details/' + x.ia[0] : 'https://openlibrary.org' + x.key, cover: x.cover_i ? `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg` : '', description: (x.subject || []).slice(0, 6).join(', '), oa: !!(x.ia && x.ia.length) }));
+  } },
+  { id: 'googlebooks', name: 'Google Books', group: 'books', types: ['գիրք'], async run(q, p) {
+    const d = await getJSON(`https://www.googleapis.com/books/v1/volumes?q=${enc(q)}&maxResults=${PER}&startIndex=${p * PER}`);
+    return (d.items || []).map(it => { const v = it.volumeInfo || {}; return { title: v.title, author: names(v.authors), year: yearOf(v.publishedDate), type: 'գիրք', link: v.canonicalVolumeLink || v.infoLink || v.previewLink || '#', cover: v.imageLinks ? httpsify(v.imageLinks.thumbnail || v.imageLinks.smallThumbnail) : '', description: clean(v.description) || (v.categories || []).join(', '), oa: !!(it.accessInfo && it.accessInfo.viewability === 'ALL_PAGES') }; });
+  } },
+  { id: 'archive', name: 'Internet Archive', group: 'books', types: ['գիրք', 'տեսանյութ'], async run(q, p) {
+    const query = enc(`(${q}) AND mediatype:(texts OR movies)`);
+    const d = await getJSON(`https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=mediatype&fl[]=description&rows=${PER}&page=${p + 1}&output=json`);
+    return ((d.response && d.response.docs) || []).map(x => ({ title: first(x.title), author: names(x.creator), year: yearOf(x.year), type: x.mediatype === 'movies' ? 'տեսանյութ' : 'գիրք', link: `https://archive.org/details/${x.identifier}`, cover: `https://archive.org/services/img/${x.identifier}`, description: clean(first(x.description)), oa: true }));
+  } },
+  { id: 'gutenberg', name: 'Project Gutenberg', group: 'books', types: ['գիրք'], async run(q, p, st) {
+    const d = await getJSON(`https://gutendex.com/books/?search=${enc(q)}&page=${p + 1}`);
+    if (!d.next) st.end = true;
+    return (d.results || []).map(b => ({ title: b.title, author: names(b.authors), year: '', type: 'գիրք', link: `https://www.gutenberg.org/ebooks/${b.id}`, cover: (b.formats && b.formats['image/jpeg']) || '', description: (b.subjects || []).slice(0, 4).join(' · '), oa: true }));
+  } },
+  { id: 'loc', name: 'Library of Congress', group: 'books', types: ['գիրք'], async run(q, p) {
+    const d = await getJSON(`https://www.loc.gov/books/?q=${enc(q)}&fo=json&c=${PER}&sp=${p + 1}`);
+    return (d.results || []).filter(r => r.url || r.id).map(r => ({ title: r.title, author: names(r.contributor), year: yearOf(r.date), type: 'գիրք', link: abs(r.url || r.id), cover: abs(first(r.image_url)), description: clean(first(r.description)) }));
+  } },
+  { id: 'wikibooks', name: 'Wikibooks', group: 'books', types: ['գիրք'], run(q, p) { const L = qLang(q); return wikiSearch(`${L}.wikibooks.org`, q, p, 'գիրք'); } },
+
+  /* ---------- Science ---------- */
+  { id: 'openalex', name: 'OpenAlex', group: 'sci', types: ['հոդված', 'գիրք', 'նյութ'], async run(q, p) {
+    const d = await getJSON(`https://api.openalex.org/works?search=${enc(q)}&per-page=${PER}&page=${p + 1}&select=id,display_name,authorships,publication_year,type,doi,open_access,abstract_inverted_index,primary_location,cited_by_count`);
+    return (d.results || []).map(w => { const src = w.primary_location && w.primary_location.source; return { title: w.display_name, author: names((w.authorships || []).map(a => a.author && a.author.display_name)), year: w.publication_year || '', type: /book/.test(w.type) ? 'գիրք' : w.type === 'dataset' ? 'նյութ' : 'հոդված', link: (w.open_access && w.open_access.oa_url) || w.doi || (w.primary_location && w.primary_location.landing_page_url) || w.id, description: clean(invAbstract(w.abstract_inverted_index)) || (src ? src.display_name : ''), oa: !!(w.open_access && w.open_access.is_oa), cites: w.cited_by_count || 0 }; });
+  } },
+  { id: 'semantic', name: 'Semantic Scholar', group: 'sci', types: ['հոդված'], async run(q, p) {
+    const d = await getJSON(`https://api.semanticscholar.org/graph/v1/paper/search?query=${enc(q)}&offset=${p * PER}&limit=${PER}&fields=title,authors,year,abstract,url,openAccessPdf,venue,citationCount`);
+    return (d.data || []).map(x => ({ title: x.title, author: names(x.authors), year: x.year || '', type: 'հոդված', link: (x.openAccessPdf && x.openAccessPdf.url) || x.url, description: clean(x.abstract) || x.venue || '', oa: !!(x.openAccessPdf && x.openAccessPdf.url), cites: x.citationCount || 0 }));
+  } },
+  { id: 'crossref', name: 'Crossref', group: 'sci', types: ['հոդված', 'գիրք'], async run(q, p) {
+    const d = await getJSON(`https://api.crossref.org/works?query=${enc(q)}&rows=${PER}&offset=${p * PER}&select=DOI,title,author,issued,container-title,abstract,URL,type,is-referenced-by-count`);
+    return ((d.message && d.message.items) || []).map(it => ({ title: first(it.title), author: names(it.author), year: it.issued && it.issued['date-parts'] && it.issued['date-parts'][0] ? it.issued['date-parts'][0][0] : '', type: /book/.test(it.type || '') ? 'գիրք' : 'հոդված', link: it.URL || 'https://doi.org/' + it.DOI, description: clean(it.abstract) || first(it['container-title']) || '', cites: it['is-referenced-by-count'] || 0 }));
+  } },
+  { id: 'arxiv', name: 'arXiv', group: 'sci', types: ['հոդված'], async run(q, p) {
+    const xml = await getText(`https://export.arxiv.org/api/query?search_query=all:${enc(q)}&start=${p * PER}&max_results=${PER}`);
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const txt = (el, tag) => { const n = el.getElementsByTagName(tag)[0]; return n ? n.textContent.replace(/\s+/g, ' ').trim() : ''; };
+    return [...doc.getElementsByTagName('entry')].map(e => ({ title: txt(e, 'title'), author: names([...e.getElementsByTagName('author')].map(a => txt(a, 'name'))), year: yearOf(txt(e, 'published')), type: 'հոդված', link: httpsify(txt(e, 'id')), description: clean(txt(e, 'summary')), oa: true }));
+  } },
+  { id: 'doaj', name: 'DOAJ', group: 'sci', types: ['հոդված'], async run(q, p) {
+    const d = await getJSON(`https://doaj.org/api/search/articles/${enc(q)}?page=${p + 1}&pageSize=${PER}`);
+    return (d.results || []).map(r => { const b = r.bibjson || {}; const full = (b.link || []).find(l => l.type === 'fulltext'); const doi = (b.identifier || []).find(i => i.type === 'doi'); return { title: b.title, author: names(b.author), year: b.year || '', type: 'հոդված', link: full ? full.url : doi ? 'https://doi.org/' + doi.id : `https://doaj.org/article/${r.id}`, description: clean(b.abstract) || (b.journal && b.journal.title) || '', oa: true }; });
+  } },
+  { id: 'hal', name: 'HAL', group: 'sci', types: ['հոդված', 'գիրք', 'տեսանյութ'], async run(q, p) {
+    const d = await getJSON(`https://api.archives-ouvertes.fr/search/?q=${enc(q)}&wt=json&rows=${PER}&start=${p * PER}&fl=title_s,authFullName_s,producedDateY_i,uri_s,abstract_s,docType_s,journalTitle_s`);
+    return ((d.response && d.response.docs) || []).map(x => ({ title: first(x.title_s), author: names(x.authFullName_s), year: x.producedDateY_i || '', type: /^(OUV|COUV)$/.test(x.docType_s) ? 'գիրք' : x.docType_s === 'VIDEO' ? 'տեսանյութ' : 'հոդված', link: x.uri_s, description: clean(first(x.abstract_s)) || x.journalTitle_s || '', oa: true }));
+  } },
+  { id: 'dblp', name: 'DBLP', group: 'sci', types: ['հոդված', 'գիրք'], async run(q, p) {
+    const d = await getJSON(`https://dblp.org/search/publ/api?q=${enc(q)}&format=json&h=${PER}&f=${p * PER}`);
+    const hits = (d.result && d.result.hits && d.result.hits.hit) || [];
+    return hits.map(h => { const x = h.info || {}; return { title: decodeHTML(String(x.title || '')).replace(/\.$/, ''), author: names(x.authors && x.authors.author), year: x.year || '', type: /Books/.test(x.type || '') ? 'գիրք' : 'հոդված', link: first(x.ee) || x.url, description: [x.venue, x.type].filter(Boolean).join(' · ') }; });
+  } },
+
+  /* ---------- Medicine & life sciences ---------- */
+  { id: 'pubmed', name: 'PubMed', group: 'med', types: ['հոդված'], async run(q, p) {
+    const base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+    const sr = await getJSON(`${base}esearch.fcgi?db=pubmed&retmode=json&retmax=${PER}&retstart=${p * PER}&sort=relevance&term=${enc(q)}`);
+    const ids = (sr.esearchresult && sr.esearchresult.idlist) || [];
+    if (!ids.length) return [];
+    const sm = await getJSON(`${base}esummary.fcgi?db=pubmed&retmode=json&id=${ids.join(',')}`);
+    const res = sm.result || {};
+    return ids.map(id => res[id]).filter(Boolean).map(x => ({ title: decodeHTML(x.title || ''), author: names(x.authors), year: yearOf(x.pubdate), type: 'հոդված', link: `https://pubmed.ncbi.nlm.nih.gov/${x.uid}/`, description: [x.fulljournalname || x.source, x.pubdate].filter(Boolean).join(' · ') }));
+  } },
+  { id: 'clinicaltrials', name: 'ClinicalTrials.gov', group: 'med', types: ['նյութ'], async run(q, p, st) {
+    if (p > 0 && !st.token) { st.end = true; return []; }
+    const d = await getJSON(`https://clinicaltrials.gov/api/v2/studies?query.term=${enc(q)}&pageSize=${PER}&format=json${st.token ? '&pageToken=' + enc(st.token) : ''}`);
+    st.token = d.nextPageToken || '';
+    if (!st.token) st.end = true;
+    return (d.studies || []).map(x => { const ps = x.protocolSection || {}; const id = ps.identificationModule || {}; const sm = ps.statusModule || {}; const sp = (ps.sponsorCollaboratorsModule || {}).leadSponsor || {}; const cond = (ps.conditionsModule || {}).conditions || []; return { title: id.briefTitle || id.officialTitle, author: sp.name || 'Անհայտ', year: yearOf(sm.startDateStruct && sm.startDateStruct.date), type: 'նյութ', link: `https://clinicaltrials.gov/study/${id.nctId}`, description: [id.nctId, sm.overallStatus, cond.slice(0, 3).join(', ')].filter(Boolean).join(' · ') + (ps.descriptionModule && ps.descriptionModule.briefSummary ? ' — ' + clean(ps.descriptionModule.briefSummary, 200) : ''), oa: true }; });
+  } },
+  { id: 'europepmc', name: 'Europe PMC', group: 'med', types: ['հոդված'], async run(q, p, st) {
+    const cursor = st.cursor || '*';
+    const d = await getJSON(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${enc(q)}&format=json&pageSize=${PER}&resultType=lite&cursorMark=${enc(cursor)}`);
+    if (!d.nextCursorMark || d.nextCursorMark === cursor) st.end = true;
+    st.cursor = d.nextCursorMark;
+    return ((d.resultList && d.resultList.result) || []).map(r => ({ title: r.title, author: clean(r.authorString || 'Անհայտ', 90), year: r.pubYear || '', type: 'հոդված', link: r.pmcid ? `https://europepmc.org/article/PMC/${r.pmcid}` : `https://europepmc.org/article/${r.source}/${r.id}`, description: [r.journalTitle, r.pmid ? 'PMID ' + r.pmid : ''].filter(Boolean).join(' · '), oa: r.isOpenAccess === 'Y', cites: r.citedByCount || 0 }));
+  } },
+
+  /* ---------- Education & economics ---------- */
+  { id: 'eric', name: 'ERIC', group: 'soc', types: ['հոդված', 'գիրք'], async run(q, p) {
+    const d = await getJSON(`https://api.ies.ed.gov/eric/?search=${enc(q)}&format=json&rows=${PER}&start=${p * PER}&fields=id,title,author,publicationdateyear,description,publicationtype,peerreviewed,e_fulltextauth`);
+    return ((d.response && d.response.docs) || []).map(x => ({ title: x.title, author: names(x.author), year: x.publicationdateyear || '', type: /book/i.test([].concat(x.publicationtype || []).join(' ')) ? 'գիրք' : 'հոդված', link: `https://eric.ed.gov/?id=${x.id}`, description: clean(x.description), oa: x.e_fulltextauth === 1 || x.e_fulltextauth === '1' }));
+  } },
+  { id: 'worldbank', name: 'World Bank', group: 'soc', types: ['նյութ', 'հոդված'], async run(q, p) {
+    const d = await getJSON(`https://search.worldbank.org/api/v2/wds?format=json&qterm=${enc(q)}&rows=${PER}&os=${p * PER}&fl=display_title,docdt,docty,pdfurl,url,authors,abstracts`);
+    const docs = d.documents || {};
+    return Object.keys(docs).filter(k => k !== 'facets' && docs[k] && docs[k].display_title).map(k => { const x = docs[k]; const au = x.authors ? Object.values(x.authors).map(a => a && (a.author || a)) : []; const ab = x.abstracts && (x.abstracts.cdata || x.abstracts['cdata!'] || ''); return { title: decodeHTML(x.display_title), author: au.length ? names(au) : 'World Bank', year: yearOf(x.docdt), type: 'նյութ', link: httpsify(x.pdfurl || x.url), description: [x.docty, clean(ab, 220)].filter(Boolean).join(' — '), oa: true }; });
+  } },
+
+  /* ---------- Data & research outputs ---------- */
+  { id: 'zenodo', name: 'Zenodo', group: 'data', types: ['նյութ', 'հոդված', 'գիրք', 'տեսանյութ'], async run(q, p) {
+    const d = await getJSON(`https://zenodo.org/api/records?q=${enc(q)}&size=${PER}&page=${p + 1}`);
+    return ((d.hits && d.hits.hits) || []).map(r => { const m = r.metadata || {}; const rt = m.resource_type || {}; const t = rt.type === 'video' ? 'տեսանյութ' : rt.type === 'publication' ? (/book/.test(rt.subtype || '') ? 'գիրք' : 'հոդված') : 'նյութ'; return { title: m.title, author: names(m.creators), year: yearOf(m.publication_date), type: t, link: (r.links && r.links.self_html) || `https://zenodo.org/records/${r.id}`, description: clean(m.description) || rt.title || '', oa: m.access_right === 'open' }; });
+  } },
+  { id: 'datacite', name: 'DataCite', group: 'data', types: ['նյութ', 'հոդված', 'գիրք', 'տեսանյութ'], async run(q, p) {
+    const d = await getJSON(`https://api.datacite.org/dois?query=${enc(q)}&page%5Bsize%5D=${PER}&page%5Bnumber%5D=${p + 1}`);
+    return (d.data || []).map(x => { const a = x.attributes || {}; const g = (a.types && a.types.resourceTypeGeneral) || ''; const t = /^Book/.test(g) ? 'գիրք' : /JournalArticle|Text|Preprint|ConferencePaper/.test(g) ? 'հոդված' : g === 'Audiovisual' ? 'տեսանյութ' : 'նյութ'; const ds = first(a.descriptions); return { title: (first(a.titles) || {}).title, author: names(a.creators), year: a.publicationYear || '', type: t, link: a.url || 'https://doi.org/' + a.doi, description: clean(ds && ds.description) || g }; });
+  } },
+
+  /* ---------- Knowledge & Q&A ---------- */
+  { id: 'wikipedia', name: 'Wikipedia', group: 'know', types: ['նյութ'], run(q, p) { return wikiSearch(`${qLang(q)}.wikipedia.org`, q, p, 'նյութ'); } },
+  { id: 'stackexchange', name: 'Stack Exchange', group: 'know', types: ['նյութ'], async run(q, p, st) {
+    const site = seSite();
+    const d = await getJSON(`https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&q=${enc(q)}&site=${site}&pagesize=${PER}&page=${p + 1}`);
+    if (!d.has_more) st.end = true;
+    return (d.items || []).map(x => ({ title: decodeHTML(x.title), author: decodeHTML((x.owner && x.owner.display_name) || 'Անհայտ'), year: x.creation_date ? new Date(x.creation_date * 1000).getFullYear() : '', type: 'նյութ', link: x.link, description: `${site} · ★ ${x.score} · ${x.answer_count} պատասխան${x.is_answered ? ' ✓' : ''} · ${(x.tags || []).slice(0, 4).join(', ')}`, oa: true }));
+  } },
+
+  /* ---------- Code ---------- */
+  { id: 'github', name: 'GitHub', group: 'code', types: ['նյութ'], async run(q, p) {
+    const d = await getJSON(`https://api.github.com/search/repositories?q=${enc(q)}&per_page=${PER}&page=${p + 1}`);
+    return (d.items || []).map(x => ({ title: x.full_name, author: (x.owner && x.owner.login) || 'Անհայտ', year: yearOf(x.updated_at), type: 'նյութ', link: x.html_url, description: [x.description, x.language, '★ ' + fmt(x.stargazers_count || 0)].filter(Boolean).join(' · '), oa: true }));
+  } },
+
+  /* ---------- Video ---------- */
+  { id: 'peertube', name: 'PeerTube', group: 'video', types: ['տեսանյութ'], async run(q, p) {
+    const d = await getJSON(`https://sepiasearch.org/api/v1/search/videos?search=${enc(q)}&start=${p * PER}&count=${PER}`);
+    return (d.data || []).map(v => { const host = v.account && v.account.host; const th = v.thumbnailUrl || v.thumbnailPath || ''; return { title: v.name, author: (v.account && (v.account.displayName || v.account.name)) || 'Անհայտ', year: yearOf(v.publishedAt), type: 'տեսանյութ', link: v.url, cover: th.startsWith('/') && host ? `https://${host}${th}` : abs(th), description: clean(v.description), oa: true }; });
+  } }
+];
+ENGINES.forEach((e, i) => { e.color = TINTS[i % TINTS.length]; });
+const ENGINE_GROUPS = [
+  ['books', 'Գրքեր'], ['sci', 'Գիտություն'], ['med', 'Բժշկություն'], ['soc', 'Կրթություն և տնտեսություն'], ['data', 'Տվյալներ'], ['know', 'Գիտելիք'], ['code', 'Կոդ'], ['video', 'Տեսանյութ']
+];
+
+/* ==================================================================
+   DATABASES — only databases the site can search itself
+   ================================================================== */
+const DB_CATS = [['multi', 'Բազմաոլորտ'], ['stem', 'Գիտություն և տեխնիկա'], ['med', 'Բժշկություն'], ['soc', 'Կրթություն և տնտեսագիտություն'], ['data', 'Տվյալներ'], ['lib', 'Գրադարաններ']];
+const DB_META = {
+  openalex: ['multi', '250+ մլն գիտական աշխատանքների, հեղինակների և ամսագրերի բաց քարտեզ։'],
+  semantic: ['multi', 'AI-ով աշխատող գիտական որոնիչ՝ ամփոփումներով և մեջբերումների գրաֆով։'],
+  crossref: ['multi', 'DOI-ների պաշտոնական բազա՝ 150+ մլն հրապարակում բոլոր ոլորտներից։'],
+  doaj: ['multi', 'Բաց հասանելիության գրախոսվող ամսագրերի ուղեցույց։'],
+  hal: ['multi', 'Բաց գիտական արխիվ՝ հոդվածներ, թեզեր, զեկույցներ։'],
+  arxiv: ['stem', 'Ֆիզիկայի, մաթեմատիկայի, ինֆորմատիկայի և տնտեսագիտության նախատպեր։'],
+  dblp: ['stem', 'Ինֆորմատիկայի հրապարակումների բիբլիոգրաֆիա։'],
+  pubmed: ['med', 'Կենսաբժշկական գրականության 36+ մլն գրառում (MEDLINE)։'],
+  europepmc: ['med', 'Կենսագիտությունների հոդվածներ, նախատպեր և լրիվ տեքստեր։'],
+  clinicaltrials: ['med', 'Աշխարհի կլինիկական հետազոտությունների ռեեստր։'],
+  eric: ['soc', 'Կրթության և մանկավարժության հետազոտությունների բազա։'],
+  worldbank: ['soc', 'Համաշխարհային բանկի զեկույցներ, փաստաթղթեր և հետազոտություններ։'],
+  zenodo: ['data', 'Հետազոտական տվյալներ, ծրագրեր և հրապարակումներ (CERN)։'],
+  datacite: ['data', 'Տվյալների հավաքածուների և գիտական արդյունքների DOI բազա։'],
+  loc: ['lib', 'ԱՄՆ Կոնգրեսի գրադարանի կատալոգ՝ գրքեր և ձեռագրեր։']
+};
+ENGINES.forEach(e => { if (DB_META[e.id]) e.db = { cat: DB_META[e.id][0], desc: DB_META[e.id][1] }; });
+const DB_NOTE = 'Տվյալների բազայի մաս';
+const dbNote = name => `<span class="db-note" title="${esc(DB_NOTE)} · ${esc(name)}"><i></i>${esc(DB_NOTE)} · ${esc(name)}</span>`;
+const dbOfItem = it => it && (it.db || (it.extra && it.extra['Տվյալների բազա'])) || '';
+
+/* Databases that turn out not to be searchable from the browser are hidden (re-checked daily) */
+const UNAV_TTL = 864e5;   // re-check once a day
+let UNAV = (() => { const u = load(K.unav, null); return new Set(u && Date.now() - u.ts < UNAV_TTL ? u.ids : []); })();
+function hardFail(err) { const m = String(err && err.message || ''); return err instanceof TypeError || err instanceof SyntaxError || /HTTP (400|401|403|404|405|410)/.test(m); }
+function markUnavailable(ids) {
+  ids = ids.filter(id => !UNAV.has(id));
+  if (!ids.length) return;
+  ids.forEach(id => UNAV.add(id));
+  store(K.unav, { ts: Date.now(), ids: [...UNAV] });
+  renderEngines(); renderDbCards();
 }
-async function runOnline(q, domain, type, sig) {
-  lastSig = sig; pendingSig = '';
-  const d = domainOf(domain);
-  const effQ = domain !== 'ALL' ? q + ' ' + (d ? d.q : domain) : q;
-  const jobs = [];
-  if (type === 'ALL' || type === 'գիրք') jobs.push(fetchOpenLibrary(effQ), fetchGoogleBooks(effQ));
-  if (type === 'ALL' || type === 'հոդված') jobs.push(fetchCrossref(effQ));
-  const settled = await Promise.allSettled(jobs);
-  if (sig !== lastSig) return;
-  let res = [], fails = 0;
-  settled.forEach(s => s.status === 'fulfilled' ? (res = res.concat(s.value)) : fails++);
-  res = res.filter(r => r.title);
-  if (!res.length) { setOnlineStatus(fails === settled.length ? 'Չհաջողվեց կապ հաստատել աղբյուրների հետ։' : 'Ինտերնետից արդյունքներ չգտնվեցին։'); $('#online-label').innerHTML = `<i class="ic">${ic('globe')}</i>Ինտերնետից`; return; }
-  setOnlineStatus('');
-  onlineResults = res;
-  renderOnline();
-}
+let enabledEngines = new Set(load(K.eng, ENGINES.map(e => e.id)).filter(id => ENGINES.some(e => e.id === id)));
+let enabledDbs = new Set(load(K.dbeng, ENGINES.filter(e => e.db).map(e => e.id)).filter(id => ENGINES.some(e => e.id === id && e.db)));
+const searchableDbs = () => ENGINES.filter(e => e.db && !UNAV.has(e.id));
+
+/* ==================================================================
+   SEARCH SESSIONS — paged, interleaved, infinite scroll
+   ================================================================== */
 const webId = r => 'RSL-WEB-' + stableHash(String(r.link) + '|' + String(r.title));
-function renderOnline() {
-  let v = onlineResults.slice();
-  if (ui.type !== 'ALL') v = v.filter(r => r.type === ui.type);
-  if (ui.sort === 'TITLE_ASC') v.sort((a, b) => String(a.title).localeCompare(String(b.title), 'hy'));
-  else if (ui.sort === 'NEWEST') v.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
-  onlineView = v;
-  const grid = $('#online-grid');
-  grid.innerHTML = '';
-  if (!v.length) { setOnlineStatus('Այս ֆիլտրով ինտերնետից արդյունքներ չկան։'); return; }
-  const frag = document.createDocumentFragment();
-  v.forEach((r, i) => {
-    const el = document.createElement('article');
-    el.className = 'card card-in';
-    el.style.setProperty('--tint', TINTS[stableHashNum(r.source + r.title) % TINTS.length]);
-    el.style.animationDelay = Math.min(i * 35, 420) + 'ms';
-    el.dataset.web = i;
-    el.innerHTML = cardHTML({ ...r, id: webId(r), domain: r.source }, i, { web: true, saved: materials.some(m => m.id === webId(r)) });
-    frag.appendChild(el);
-  });
-  grid.appendChild(frag);
-  $('#online-label').innerHTML = `<i class="ic">${ic('globe')}</i>Ինտերնետից · ${v.length} արդյունք`;
+const dedupeKey = r => String(r.title).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '') + '|' + (r.year || '');
+
+function makeSearch(cfg) {
+  const el = k => document.getElementById(cfg.ids[k]);
+  const S = { src: cfg.src, sig: '', sort: '', q: '', type: 'ALL', domain: 'ALL', page: 0, runs: [], seen: new Set(), loading: false, ready: false, timer: null, empty: 0, view: [] };
+  S.status = html => { const b = el('status'); b.innerHTML = html || ''; b.hidden = !html; };
+  S.label = () => {
+    const used = S.runs.filter(r => r.n).length;
+    el('label').innerHTML = `<i class="ic">${ic(cfg.icon)}</i>${cfg.title}${S.view.length ? ` · ${fmt(S.view.length)} արդյունք · ${used} ${cfg.unit}` : ''}`;
+  };
+  S.reset = () => {
+    clearTimeout(S.timer);
+    Object.assign(S, { sig: '', q: '', page: 0, runs: [], seen: new Set(), loading: false, ready: false, empty: 0, view: [] });
+    el('grid').innerHTML = ''; el('more').hidden = true;
+    cfg.paint();
+  };
+  S.update = () => {
+    const st = cfg.state();
+    const q = (st.q || '').trim();
+    if (!st.active || q.length < 3) { if (cfg.ids.block) el('block').hidden = true; S.reset(); S.status(st.active && cfg.hint ? cfg.hint : ''); S.label(); return; }
+    if (cfg.ids.block) el('block').hidden = false;
+    if (st.type === 'AI') { S.reset(); S.sig = 'ai'; S.label(); S.status('AI-ով ստեղծված նյութերը ցուցադրվում են միայն գրադարանից։'); return; }
+    const list = cfg.engines().filter(e => !UNAV.has(e.id) && (st.type === 'ALL' || e.types.includes(st.type)));
+    const sig = [q, st.domain || '', st.type, list.map(e => e.id).sort().join(',')].join('|');
+    if (sig === S.sig) { if (S.sort !== st.sort) { S.sort = st.sort; S.rerender(); } return; }
+    S.reset();
+    Object.assign(S, { sig, sort: st.sort, q, type: st.type, domain: st.domain || 'ALL' });
+    S.label();
+    if (!list.length) { S.status(cfg.noneMsg); return; }
+    S.runs = list.map(e => ({ e, st: {}, done: false, n: 0, err: false, loading: false }));
+    cfg.paint();
+    S.status(`<span class="spin"></span>Փնտրում ենք ${list.length} ${cfg.unitIn} «${esc(q)}»…`);
+    S.timer = setTimeout(() => { S.ready = true; S.loadMore(); }, 650);
+  };
+  S.sortList = arr => {
+    if (S.sort === 'TITLE_ASC') arr.sort((a, b) => String(a.title).localeCompare(String(b.title), 'hy'));
+    else if (S.sort === 'RATING_DESC') arr.sort((a, b) => (b.cites || 0) - (a.cites || 0));
+    return arr;
+  };
+  S.loadMore = async () => {
+    if (!S.ready || S.loading || !S.sig || S.sig === 'ai') return;
+    const active = S.runs.filter(r => !r.done && !UNAV.has(r.e.id));
+    if (!active.length) { S.moreUI(); return; }
+    const sig = S.sig, page = S.page;
+    S.loading = true;
+    active.forEach(r => { r.loading = true; });
+    cfg.paint(); S.moreUI();
+    const d = domainOf(S.domain);
+    const effQ = S.domain !== 'ALL' ? S.q + ' ' + (d ? d.q : S.domain) : S.q;
+    const settled = await Promise.allSettled(active.map(r => r.e.run(effQ, page, r.st)));
+    if (sig !== S.sig) return;
+    const anyOk = settled.some(x => x.status === 'fulfilled');
+    const dead = [];
+    const lists = [];
+    settled.forEach((x, k) => {
+      const r = active[k];
+      r.loading = false;
+      if (x.status === 'rejected') { r.done = true; if (!r.n) r.err = true; if (anyOk && !r.n && hardFail(x.reason) && r.e.db) dead.push(r.e.id); console.warn(r.e.name, x.reason); return; }
+      const arr = (x.value || []).filter(v => v && v.title).map(v => ({ ...v, title: String(v.title).trim(), link: safeUrl(v.link), source: r.e.name, engine: r.e.id, db: r.e.db ? r.e.name : '', type: canonicalType(v.link, v.type) }));
+      const fresh = arr.filter(v => { const key = dedupeKey(v); if (S.seen.has(key)) return false; S.seen.add(key); return true; });
+      if (!arr.length || !fresh.length || r.st.end) r.done = true;
+      const typed = S.type === 'ALL' ? fresh : fresh.filter(v => v.type === S.type);
+      r.n += typed.length;
+      lists.push(typed);
+    });
+    const batch = [];
+    for (let i = 0, more = true; more; i++) { more = false; lists.forEach(l => { if (i < l.length) { batch.push(l[i]); more = true; } }); }
+    S.sortList(batch);
+    S.page++;
+    S.loading = false;
+    S.append(batch);
+    if (dead.length) markUnavailable(dead);
+    cfg.paint(); S.label();
+    const finished = S.runs.every(r => r.done);
+    if (!S.view.length && finished) S.status(S.runs.every(r => r.err) ? 'Չհաջողվեց կապ հաստատել աղբյուրների հետ։' : 'Արդյունքներ չգտնվեցին։');
+    else S.status('');
+    S.moreUI();
+    S.empty = batch.length ? 0 : S.empty + 1;
+    if (!finished && S.empty < 5) {
+      const sent = el('sentinel').getBoundingClientRect();
+      if (!batch.length || (sent.top < innerHeight + 900 && sent.height >= 0 && el('grid').offsetParent)) setTimeout(() => S.loadMore(), 60);
+    }
+  };
+  S.moreUI = () => {
+    const hasMore = S.runs.some(r => !r.done) && S.sig && S.sig !== 'ai';
+    el('more').hidden = !((hasMore || S.loading) && S.view.length);
+    el('loader').hidden = !S.loading;
+    el('moreBtn').hidden = S.loading || !hasMore;
+  };
+  S.card = (r, i) => {
+    const c = document.createElement('article');
+    c.className = 'card card-in' + (isAI(r.link) ? ' card--ai' : '');
+    c.style.setProperty('--tint', (ENGINES.find(e => e.id === r.engine) || {}).color || TINTS[0]);
+    c.style.animationDelay = Math.min((i % PER) * 30, 420) + 'ms';
+    c.dataset.web = i; c.dataset.src = S.src;
+    c.tabIndex = 0;
+    c.setAttribute('aria-label', r.title);
+    c.innerHTML = cardHTML({ ...r, id: webId(r), domain: r.source }, i, { web: true, src: S.src, saved: materials.some(m => m.id === webId(r)) });
+    return c;
+  };
+  S.append = batch => {
+    const frag = document.createDocumentFragment();
+    batch.forEach(r => { S.view.push(r); frag.appendChild(S.card(r, S.view.length - 1)); });
+    el('grid').appendChild(frag);
+  };
+  S.rerender = () => {
+    S.sortList(S.view);
+    const frag = document.createDocumentFragment();
+    S.view.forEach((r, i) => frag.appendChild(S.card(r, i)));
+    el('grid').innerHTML = ''; el('grid').appendChild(frag);
+  };
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && el('grid').offsetParent) S.loadMore(); }), { rootMargin: '900px' }).observe(el('sentinel'));
+  el('moreBtn').addEventListener('click', () => S.loadMore());
+  return S;
 }
-function saveWeb(i) {
-  const r = onlineView[i];
+
+let LIB = null, DBS = null;
+const searches = {};
+function initSearches() {
+  LIB = searches.lib = makeSearch({
+    src: 'lib', icon: 'globe', title: 'Ինտերնետից', unit: 'համակարգ', unitIn: 'համակարգերում',
+    noneMsg: 'Միացրեք գոնե մեկ որոնողական համակարգ այս ձևաչափի համար։',
+    ids: { block: 'online', grid: 'online-grid', status: 'online-status', label: 'online-label', more: 'online-more', loader: 'online-loader', moreBtn: 'online-more-btn', sentinel: 'online-sentinel' },
+    engines: () => ENGINES.filter(e => enabledEngines.has(e.id)),
+    state: () => ({ active: !ui.onlyBm, q: ui.q, type: ui.type, sort: ui.sort, domain: ui.domain }),
+    paint: paintEngineStates
+  });
+  DBS = searches.db = makeSearch({
+    src: 'db', icon: 'layers', title: 'Տվյալների բազաներից', unit: 'բազա', unitIn: 'բազաներում',
+    hint: 'Գրեք առնվազն 3 նիշ՝ որոնելու բոլոր միացված բազաներում միաժամանակ։',
+    noneMsg: 'Միացրեք գոնե մեկ բազա այս ձևաչափի համար։',
+    ids: { grid: 'db-grid', status: 'db-status', label: 'db-label', more: 'db-more', loader: 'db-loader', moreBtn: 'db-more-btn', sentinel: 'db-sentinel' },
+    engines: () => searchableDbs().filter(e => enabledDbs.has(e.id)),
+    state: () => ({ active: ui.tab === 'databases', q: $('#db-q').value, type: $('#db-type').value, sort: $('#db-sort').value, domain: 'ALL' }),
+    paint: paintDbStates
+  });
+}
+const updateOnline = () => LIB && LIB.update();
+
+/* ---- Library engine panel ---- */
+function renderEngines() {
+  const box = $('#eng-groups');
+  if (!box) return;
+  const visible = ENGINES.filter(e => !UNAV.has(e.id));
+  box.innerHTML = ENGINE_GROUPS.map(([g, label]) => { const list = visible.filter(e => e.group === g); return list.length ? `<div class="eng-group"><h5>${esc(label)}</h5><div>${list.map(e => `<button type="button" class="eng" data-engine="${e.id}" aria-pressed="${enabledEngines.has(e.id)}" style="--ec:${e.color}"><i></i>${esc(e.name)}${e.db ? '<span class="eng__db" title="Տվյալների բազա">DB</span>' : ''}<span class="eng__n"></span></button>`).join('')}</div></div>` : ''; }).join('');
+  const on = visible.filter(e => enabledEngines.has(e.id)).length;
+  $('#eng-count').textContent = `${on}/${visible.length}`;
+  $('#eng-badge').textContent = `${on}/${visible.length}`;
+  paintEngineStates();
+}
+function paintStates(selector, attr, S) {
+  document.querySelectorAll(selector).forEach(chip => {
+    const run = S && S.runs.find(r => r.e.id === chip.dataset[attr]);
+    const n = chip.querySelector('.eng__n');
+    if (chip.dataset.state === 'checking') return;
+    if (!run) { chip.dataset.state = ''; if (n) n.textContent = ''; return; }
+    chip.dataset.state = run.loading ? 'loading' : run.err ? 'err' : run.done ? 'done' : 'ok';
+    if (n) n.textContent = run.err ? '×' : run.n ? fmt(run.n) : run.loading ? '…' : '0';
+  });
+}
+function paintEngineStates() { paintStates('.eng', 'engine', LIB); }
+function paintDbStates() { paintStates('.dbc', 'dbeng', DBS); }
+
+/* ---- Databases tab ---- */
+function renderDbCards() {
+  const box = $('#db-cards');
+  if (!box) return;
+  const list = searchableDbs();
+  box.innerHTML = DB_CATS.map(([c, label]) => {
+    const dbs = list.filter(e => e.db.cat === c);
+    return dbs.length ? `<div class="db-group"><h5>${esc(label)}</h5><div class="dbgrid">${dbs.map(e => `<button type="button" class="dbc" data-dbeng="${e.id}" aria-pressed="${enabledDbs.has(e.id)}" style="--tint:${e.color}"${probing.has(e.id) ? ' data-state="checking"' : ''}><span class="dbc__top"><span class="dbc__sw" aria-hidden="true"></span><b>${esc(e.name)}</b><span class="eng__n"></span></span><span class="dbc__desc">${esc(e.db.desc)}</span></button>`).join('')}</div></div>` : '';
+  }).join('');
+  const on = list.filter(e => enabledDbs.has(e.id)).length;
+  $('#db-count').textContent = `${on}/${list.length}`;
+  $('#db-total').textContent = list.length;
+  paintDbStates();
+}
+
+/* Quick one-time check that each database answers from the browser */
+const probing = new Set();
+async function probeDatabases() {
+  const last = load(K.probe, 0);
+  if (Date.now() - last < UNAV_TTL) return;
+  const list = searchableDbs();
+  list.forEach(e => probing.add(e.id));
+  renderDbCards();
+  const res = await Promise.allSettled(list.map(e => e.run('education', 0, {})));
+  probing.clear();
+  const anyOk = res.some(r => r.status === 'fulfilled');
+  if (anyOk) { store(K.probe, Date.now()); markUnavailable(list.filter((e, i) => res[i].status === 'rejected' && hardFail(res[i].reason)).map(e => e.id)); }
+  renderDbCards();
+}
+
+function saveWeb(i, src) {
+  const S = searches[src || 'lib'];
+  const r = S && S.view[i];
   if (!r) return;
   const id = webId(r);
   if (materials.some(m => m.id === id)) { toast('Արդեն ձեր գրադարանում է'); return; }
-  userItems.unshift({ id, title: r.title, author: r.author || 'Անհայտ', link: r.link || '#', domain: ui.domain !== 'ALL' ? ui.domain : DEFAULT_DOMAIN, type: canonicalType(r.link, r.type), rating: 5, description: r.description || `${r.type === 'հոդված' ? 'Գիտական հոդված' : 'Գիրք'}՝ ${r.source}-ից։`, tags: [], extra: { 'Աղբյուր': r.source, 'Տարի': String(r.year || '—') }, cover: r.cover || '', origin: 'web' });
+  userItems.unshift({ id, title: r.title, author: r.author || 'Անհայտ', link: r.link || '#', domain: ui.domain !== 'ALL' ? ui.domain : DEFAULT_DOMAIN, type: canonicalType(r.link, r.type), rating: 5, description: r.description || `${(TYPES[r.type] || TYPES['նյութ']).label}՝ ${r.source}-ից։`, tags: [], extra: Object.assign({ 'Աղբյուր': r.source, 'Տարի': String(r.year || '—') }, r.cites ? { 'Մեջբերումներ': fmt(r.cites) } : {}, r.db ? { 'Տվյալների բազա': r.db } : {}), cover: r.cover || '', origin: 'web' });
   store(K.user, userItems);
   rebuild();
   populateDomainSelect(); updateStats(); paintBookmarks();
   const list = filtered(); $('#found').textContent = fmt(list.length); renderGrid(list);
-  renderOnline();
+  document.querySelectorAll(`[data-act="save-web"][data-i="${i}"][data-src="${src || 'lib'}"]`).forEach(b => { b.outerHTML = `<span class="icon-btn ok" title="Պահպանված է"><i class="ic">${ic('check')}</i></span>`; });
   toast('Պահպանվեց ձեր գրադարանում');
 }
 
@@ -1677,7 +2108,7 @@ async function handleUrl() {
   let url = $('#url-in').value.trim();
   if (!url) { impStatus('Մուտքագրեք հղումը։', false); return; }
   const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (m && m[1] === SHEET_ID) { impStatus('<span class="spin"></span>Սա գրադարանի հիմնական Sheet-ն է — թարմացնում ենք…'); await syncSheet(true); impStatus($('#sync-text').textContent, $('#sync').dataset.state === 'ok'); return; }
+  if (m && m[1] === LIB_ID) { impStatus('<span class="spin"></span>Սա գրադարանի հիմնական աղբյուրն է — թարմացնում ենք…'); await syncLibrary(true); impStatus('Գրադարանը թարմացված է։', true); return; }
   const urls = [];
   if (m && /docs\.google\.com\/spreadsheets/.test(url)) urls.push(`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=xlsx`, `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv`);
   else if (m && /drive\.google\.com/.test(url)) urls.push(`https://drive.google.com/uc?export=download&id=${m[1]}`);
@@ -1791,7 +2222,21 @@ function bind() {
   $('#cite-toggle').addEventListener('click', e => { const b = $('#cite-box'); b.hidden = !b.hidden; e.currentTarget.setAttribute('aria-expanded', !b.hidden); if (!b.hidden) $('#cite-input').focus(); });
   $('#cite-add').addEventListener('click', addByCitation);
   $('#import-btn').addEventListener('click', () => { $('#imp-status').hidden = true; openScrim('import'); });
-  $('#resync-btn').addEventListener('click', () => syncSheet(true));
+  $('#resync-btn').addEventListener('click', () => syncLibrary(true));
+  $('#eng-toggle').addEventListener('click', e => { const b = $('#engines'); b.hidden = !b.hidden; e.currentTarget.setAttribute('aria-expanded', !b.hidden); });
+  $('#engines').addEventListener('click', e => {
+    const chip = e.target.closest('.eng'), all = e.target.closest('[data-eng]');
+    if (chip) { const id = chip.dataset.engine; enabledEngines.has(id) ? enabledEngines.delete(id) : enabledEngines.add(id); }
+    else if (all) enabledEngines = new Set(all.dataset.eng === 'all' ? ENGINES.map(x => x.id) : []);
+    else return;
+    store(K.eng, [...enabledEngines]);
+    renderEngines(); updateOnline();
+  });
+  let dbTimer = null;
+  $('#db-q').addEventListener('input', () => { clearTimeout(dbTimer); dbTimer = setTimeout(() => DBS.update(), 200); });
+  $('#db-type').addEventListener('change', () => DBS.update());
+  $('#db-sort').addEventListener('change', () => DBS.update());
+
   $('#bm-btn').addEventListener('click', () => toggleDrawer());
   $('#drawer-close').addEventListener('click', () => toggleDrawer(false));
   $('#drawer-scrim').addEventListener('click', () => toggleDrawer(false));
@@ -1799,7 +2244,7 @@ function bind() {
   document.querySelectorAll('.hdr__nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
   // Modal
-  $('#m-bm').addEventListener('click', () => current && toggleBookmark(current.id));
+  $('#m-bm').addEventListener('click', () => { if (!current) return; if (currentWeb != null) { saveWeb(currentWeb.i, currentWeb.src); paintModalBm(); } else toggleBookmark(current.id); });
   $('#m-open').addEventListener('click', e => { e.preventDefault(); current && openUrl(current.link); });
   $('#m-copy-link').addEventListener('click', () => current && copyText(current.link, 'Հղումը պատճենվեց'));
   $('#m-copy-cite').addEventListener('click', () => copyText($('#m-cite').textContent, 'Հղման ձևաչափը պատճենվեց'));
@@ -1813,7 +2258,6 @@ function bind() {
   });
 
   // Import
-  $('#url-in').value = SHEET_EDIT_URL;
   $('#file-in').addEventListener('change', e => handleFile(e.target.files[0]));
   $('#url-go').addEventListener('click', handleUrl);
   const drop = $('#drop');
@@ -1827,22 +2271,27 @@ function bind() {
     const a = act && act.dataset.act;
     if (a === 'home') { e.preventDefault(); switchTab('materials'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (a === 'tab-domains') { switchTab('domains'); return; }
+
     if (a === 'reset') { resetFilters(); return; }
     if (a === 'domain') { switchTab('materials'); $('#f-domain').value = act.dataset.domain; ui.domain = act.dataset.domain; applyFilters(); return; }
     if (a === 'bm') { e.stopPropagation(); toggleBookmark(act.dataset.id); return; }
     if (a === 'del') { e.stopPropagation(); deleteItem(act.dataset.id); return; }
-    if (a === 'save-web') { e.stopPropagation(); saveWeb(+act.dataset.i); return; }
+    if (a === 'save-web') { e.stopPropagation(); saveWeb(+act.dataset.i, act.dataset.src); return; }
     if (a === 'link') { e.preventDefault(); e.stopPropagation(); openUrl(act.getAttribute('href')); return; }
     if (a === 'bm-open') { toggleDrawer(false); openDetail(act.dataset.id); return; }
     const card = e.target.closest('#grid .card');
     if (card) openDetail(card.dataset.id);
-    const web = e.target.closest('#online-grid .card');
-    if (web) { const r = onlineView[+web.dataset.web]; r && openUrl(r.link); }
+    const dbc = e.target.closest('.dbc');
+    if (dbc) { const id = dbc.dataset.dbeng; enabledDbs.has(id) ? enabledDbs.delete(id) : enabledDbs.add(id); store(K.dbeng, [...enabledDbs]); renderDbCards(); DBS.update(); return; }
+    const dball = e.target.closest('[data-dball]');
+    if (dball) { enabledDbs = new Set(dball.dataset.dball === 'all' ? searchableDbs().map(x => x.id) : []); store(K.dbeng, [...enabledDbs]); renderDbCards(); DBS.update(); return; }
+    const web = e.target.closest('#online-grid .card, #db-grid .card');
+    if (web) openDetail(null, +web.dataset.web, web.dataset.src);
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    const card = e.target.closest && e.target.closest('#grid .card, .bm');
-    if (card && e.target === card) { e.preventDefault(); card.classList.contains('bm') ? (toggleDrawer(false), openDetail(card.dataset.id)) : openDetail(card.dataset.id); }
+    const card = e.target.closest && e.target.closest('#grid .card, #online-grid .card, #db-grid .card, .bm');
+    if (card && e.target === card) { e.preventDefault(); if (card.dataset.web != null) openDetail(null, +card.dataset.web, card.dataset.src); else if (card.classList.contains('bm')) { toggleDrawer(false); openDetail(card.dataset.id); } else openDetail(card.dataset.id); }
   });
 }
 
@@ -1855,11 +2304,14 @@ function boot() {
   bind();
   rebuild();
   // If we already have a cached sheet, show it immediately (no skeleton)
-  if (sheetCache && sheetCache.items && sheetCache.items.length) { gridLoading = false; setSync('busy', `Պահված պատճեն ${timeStr(sheetCache.ts)} · թարմացվում է…`); }
+  initSearches();
+  renderEngines();
+  renderDbCards();
+  if (sheetCache && sheetCache.items && sheetCache.items.length) gridLoading = false;
   else materials = userItems.slice();
   refreshAll();
-  runIntro(() => { startCounter(); observeReveals(); });
-  syncSheet(false);
+  runIntro(() => { introDone = true; animateTotal(totalTarget); observeReveals(); });
+  syncLibrary(false);
 }
 document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot) : boot();
 
