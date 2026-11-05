@@ -19,9 +19,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-/* =================================================================
+/* ==================================================================
    RED STONE pixel face (from github.com/RedStoneTM/RedStoneTeam)
-   ================================================================= */
+   ================================================================== */
 @font-face {
   font-family: "NotCake";
   src: url("https://cdn.jsdelivr.net/gh/RedStoneTM/RedStoneTeam@main/not-cake-unicode-v3-3-1.otf") format("opentype");
@@ -390,6 +390,7 @@ button { cursor: pointer; }
    TOOLBAR
    ================================================================== */
 .tools { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.tools--lib { grid-template-columns: minmax(0, 2fr) repeat(5, minmax(0, 1fr)); }
 .field { position: relative; }
 .field label { position: absolute; top: 7px; left: 14px; font-family: var(--f-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); pointer-events: none; }
 .field .ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-3); }
@@ -416,10 +417,10 @@ button { cursor: pointer; }
 /* ==================================================================
    CARDS
    ================================================================== */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); grid-auto-flow: row dense; gap: 14px; margin-top: 22px; }
+.grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: var(--row, 236px); gap: 14px; margin-top: 22px; }
 .card {
   --tint: var(--red-stone);
-  position: relative; display: flex; flex-direction: column; min-height: 248px;
+  position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0;
   background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%);
   cursor: pointer; isolation: isolate; overflow: hidden;
@@ -438,9 +439,8 @@ button { cursor: pointer; }
 .card:hover::before { width: 100%; }
 .card:hover::after { transform: translateX(100%) skewX(-18deg); }
 .card:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--focus); }
-.card--wide { grid-column: span 2; }
 .card--wide .card__title { font-size: clamp(22px, 2vw, 28px); }
-.card--feature { grid-column: span 2; background: var(--obsidian); color: var(--tuff-white); box-shadow: none; }
+.card--feature { background: var(--obsidian); color: var(--tuff-white); box-shadow: none; }
 .card--feature .card__desc, .card--feature .card__author { color: #B9BCC4; }
 .card--feature .card__foot { border-color: rgba(246,241,236,.14); }
 .card--feature .card__title { font-size: clamp(24px, 2.4vw, 34px); }
@@ -479,6 +479,38 @@ button { cursor: pointer; }
 .card--feature .open-link { color: var(--artik); }
 .open-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .card-in { animation: cardIn .6s var(--ease-form) both; }
+/* Tetris drop: each piece falls into its slot and settles */
+.fall { animation: fall .7s var(--ease-settle) both; animation-delay: var(--d, 0ms); }
+@keyframes fall { 0% { opacity: 0; transform: translateY(-64px) scale(.94); } 55% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+.card__body { overflow: hidden; min-height: 0; }
+.card__body > * { flex-shrink: 0; }
+.card[data-h="1"][data-w] .card__desc { -webkit-line-clamp: 1; margin-top: 10px; }
+.card[data-h="1"] .card__foot { margin-top: 12px; }
+.card__foot { flex: none; }
+.card[data-w="1"][data-h="1"] .card__title { -webkit-line-clamp: 2; font-size: 17px; }
+.card[data-w="1"][data-h="1"] .card__dbn { display: none; }
+.card[data-h="2"] .card__title { -webkit-line-clamp: 4; font-size: 22px; }
+.card[data-h="2"] .card__desc { -webkit-line-clamp: 9; }
+.card[data-w="2"][data-h="1"] .card__title { font-size: clamp(20px, 1.7vw, 26px); -webkit-line-clamp: 2; }
+.card[data-w="2"][data-h="1"] .card__desc { -webkit-line-clamp: 2; }
+.card[data-w="2"][data-h="2"] .card__title { font-size: clamp(26px, 2.5vw, 38px); -webkit-line-clamp: 4; letter-spacing: -.02em; }
+.card[data-w="2"][data-h="2"] .card__desc { -webkit-line-clamp: 10; font-size: 14px; }
+.card[data-w="3"] .card__title { font-size: clamp(24px, 2.2vw, 32px); }
+.card__cover { display: none; width: 100%; height: 130px; object-fit: cover; margin-top: 12px; box-shadow: inset 0 0 0 1px var(--line); }
+.card[data-h="2"] .card__cover { display: block; }
+.card[data-w="1"][data-h="1"] .card__cover { display: none; }
+.card--quartz { background: color-mix(in srgb, var(--tint) 9%, var(--surface)); }
+.card--tall .card__shard { width: 180px; height: 180px; }
+.fav { width: 16px; height: 16px; flex: none; image-rendering: auto; }
+.lang { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em; padding: 2px 5px; color: var(--ink-2); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.card--feature .lang { background: transparent; color: #B9BCC4; box-shadow: inset 0 0 0 1px rgba(246,241,236,.25); }
+.mosaic-fill { position: relative; overflow: hidden; display: grid; place-items: center; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%); animation: fall .7s var(--ease-settle) both; animation-delay: var(--d, 0ms); }
+.mosaic-fill::before { content: ""; position: absolute; width: 70%; aspect-ratio: 1; background: var(--tint, var(--red-stone)); opacity: .14; clip-path: polygon(30% 0, 100% 12%, 88% 78%, 40% 100%, 0 56%); transform: rotate(var(--rot, 0deg)); }
+.mosaic-fill span { position: relative; font-family: var(--f-pixel); font-size: 22px; color: var(--ink-3); letter-spacing: .02em; }
+.sec-head { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 6px 16px; padding: 22px 0 12px; border-bottom: 1px solid var(--ink); margin-top: 18px; }
+.sec-head:first-child { margin-top: 0; padding-top: 0; }
+.sec-head .st__idx { grid-column: 1 / -1; }
+.sec-head h3 { margin: 0; font-family: var(--f-display); font-weight: 900; text-transform: uppercase; font-stretch: 62.5%; font-size: clamp(34px, 4vw, 56px); line-height: .9; }
 @keyframes cardIn { from { opacity: 0; transform: translateY(18px); clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); } to { opacity: 1; transform: none; } }
 
 .empty { text-align: center; padding: 64px 16px; color: var(--ink-2); }
@@ -651,7 +683,7 @@ button { cursor: pointer; }
    ================================================================== */
 @media (max-width: 1100px) {
   .hdr__tag { display: none; }
-  .tools, .tools--db { grid-template-columns: 1fr 1fr; }
+  .tools, .tools--db, .tools--lib { grid-template-columns: 1fr 1fr; }
   .field--search { grid-column: 1 / -1; }
   .ftr__grid { grid-template-columns: 1fr 1fr; }
 }
@@ -666,14 +698,13 @@ button { cursor: pointer; }
   .hdr__actions { margin-left: auto; }
   .add-label { display: none; }
   .add-btn { width: 42px; padding: 0; }
-  .card--wide, .card--feature { grid-column: span 1; }
 }
 @media (max-width: 560px) {
   .hdr__in { height: 62px; gap: 10px; }
   .logo img { width: 34px; height: 34px; }
   .logo__word { font-size: 18px; }
   .hdr__actions .btn--icon { width: 38px; height: 38px; }
-  .tools, .tools--db { grid-template-columns: 1fr; }
+  .tools, .tools--db, .tools--lib { grid-template-columns: 1fr; }
   .total__ruler { display: none; }
   .eng-group { grid-template-columns: 1fr; }
   .st__head { grid-template-columns: 1fr; }
@@ -778,10 +809,14 @@ button { cursor: pointer; }
       <p class="found" aria-live="polite">Գտնված է՝ <b id="found">0</b> նյութ</p>
     </header>
 
-    <div class="tools" role="search">
+    <div class="tools tools--lib" role="search">
       <div class="field field--search">
         <i class="ic" data-ic="search"></i>
         <input class="input" type="search" id="q" placeholder="Որոնել անվանումով, հեղինակով, թեմայով…" autocomplete="off" aria-label="Որոնում">
+      </div>
+      <div class="field">
+        <label for="f-section">Բաժին</label>
+        <select class="select" id="f-section"><option value="ALL">Բոլոր բաժինները</option></select>
       </div>
       <div class="field">
         <label for="f-domain">Ոլորտ</label>
@@ -795,13 +830,20 @@ button { cursor: pointer; }
           <option value="նյութ">Ուսումնական նյութ</option>
           <option value="տեսանյութ">Տեսանյութ / Տեսադաս</option>
           <option value="հոդված">Հոդված / Article</option>
+          <option value="աուդիո">Աուդիո / Podcast</option>
+          <option value="գործիք">Գործիք / Tool</option>
           <option value="AI">✦ AI-ով ստեղծված (ChatGPT)</option>
         </select>
       </div>
       <div class="field">
+        <label for="f-lang">Լեզու</label>
+        <select class="select" id="f-lang"><option value="ALL">Բոլոր լեզուները</option></select>
+      </div>
+      <div class="field">
         <label for="f-sort">Դասավորել</label>
         <select class="select" id="f-sort">
-          <option value="NEWEST">Վերջին ավելացված</option>
+          <option value="RANDOM">Պատահական</option>
+          <option value="NEWEST">Ըստ աղյուսակի</option>
           <option value="TITLE_ASC">Անվանումով (Ա–Ֆ)</option>
           <option value="RATING_DESC">Ըստ վարկանիշի</option>
         </select>
@@ -811,6 +853,7 @@ button { cursor: pointer; }
     <div class="chips">
       <button type="button" class="btn btn--sm" id="cite-toggle" aria-expanded="false" aria-controls="cite-box"><i class="ic" data-ic="quote"></i>Ավելացնել մեջբերումով</button>
       <button type="button" class="btn btn--sm" id="import-btn"><i class="ic" data-ic="upload"></i>Ներմուծել</button>
+      <button type="button" class="btn btn--sm" id="shuffle-btn" title="Նոր պատահական դասավորություն"><i class="ic" data-ic="shuffle"></i>Խառնել</button>
       <button type="button" class="btn btn--sm" id="resync-btn" title="Թարմացնել գրադարանը"><i class="ic" data-ic="sync"></i>Թարմացնել</button>
       <button type="button" class="btn btn--sm" id="eng-toggle" aria-expanded="false" aria-controls="engines"><i class="ic" data-ic="globe"></i>Որոնողական համակարգեր <span class="eng__n" id="eng-badge">0</span></button>
       <span class="spacer"></span>
@@ -1000,7 +1043,7 @@ button { cursor: pointer; }
 /* ==================================================================
    CONFIG
    ================================================================== */
-const LIB_ID = '1g_lcrldXSjYyilbN6xUUDC6POFCQRFlz';
+const LIB_ID = '1vQQVIljL8r8Wxagdq43JDkAxYdUWGL_5';
 // Library source endpoints, tried in order — the first that answers with parseable data wins.
 const LIB_URLS = [
   `https://docs.google.com/spreadsheets/d/${LIB_ID}/export?format=xlsx`,
@@ -1008,7 +1051,7 @@ const LIB_URLS = [
   `https://docs.google.com/spreadsheets/d/${LIB_ID}/export?format=csv`,
   `https://drive.google.com/uc?export=download&id=${LIB_ID}`
 ];
-const K = { user: 'rsl_user_items', sheet: 'rsl_sheet_cache', bm: 'rsl_bookmarks', theme: 'rsl_theme', eng: 'rsl_engines', dbeng: 'rsl_db_engines', unav: 'rsl_unavailable', probe: 'rsl_db_probe' };
+const K = { user: 'rsl_user_items', sheet: 'rsl_sheet_cache_v2', bm: 'rsl_bookmarks', theme: 'rsl_theme', eng: 'rsl_engines', dbeng: 'rsl_db_engines', unav: 'rsl_unavailable', probe: 'rsl_db_probe' };
 const STONE = 'https://cdn.jsdelivr.net/gh/RedStoneTM/RedStoneTeam@main/logorightcolores.png';
 
 /* ==================================================================
@@ -1034,6 +1077,7 @@ const ICONS = {
   upload: 'M12 16V4M6 10l6-6 6 6M4 20h16',
   sync: 'M20 4v5h-5 M4 20v-5h5 M20 9l-3-5H7L4 9 M4 15l3 5h10l3-5',
   layers: 'M12 3l9 5-9 5-9-5z M3 13l9 5 9-5',
+  shuffle: 'M3 7h4l10 10h4 M17 13v4h4 M3 17h4l3-3 M14 10l3-3h4 M17 3v4h4',
   link: 'M10 14l4-4 M9 7l2-2h4l4 4v4l-2 2 M15 17l-2 2H9l-4-4v-4l2-2',
   moon: 'M14 3L8 5 4 11l2 7 7 3 7-4-7-3-2-6z',
   sun: 'M12 7l5 5-5 5-5-5z M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4'
@@ -1081,17 +1125,26 @@ const TYPES = {
   'գիրք':      { label: 'Գիրք',    color: 'var(--steel)' },
   'նյութ':     { label: 'Նյութ',    color: 'var(--glint)' },
   'տեսանյութ': { label: 'Տեսադաս', color: 'var(--red-stone)' },
-  'հոդված':    { label: 'Հոդված',   color: 'var(--artik)' }
+  'հոդված':    { label: 'Հոդված',   color: 'var(--artik)' },
+  'աուդիո':    { label: 'Աուդիո',   color: 'var(--coral)' },
+  'գործիք':    { label: 'Գործիք',   color: 'var(--slate)' }
 };
 function normalizeType(raw) {
   const v = String(raw || '').trim().toLowerCase();
   if (/տեսա|video|vid|youtube|видео/.test(v)) return 'տեսանյութ';
+  if (/աուդիո|ձայն|audio|podcast|подкаст|аудио/.test(v)) return 'աուդիո';
+  if (/գործիք|tool|калькул|инструмент|software|app/.test(v)) return 'գործիք';
   if (/հոդված|article|journal|paper|стать/.test(v)) return 'հոդված';
   if (/գիրք|գրք|դասագ|book|textbook|книг|учебн/.test(v)) return 'գիրք';
   return 'նյութ';
 }
 const isYouTube = l => /youtube\.com|youtu\.be/i.test(String(l || ''));
 const canonicalType = (link, type) => isYouTube(link) ? 'տեսանյութ' : normalizeType(type);
+const LANGS = { hy: 'Հայերեն', ru: 'Русский', en: 'English' };
+function normLang(v) { v = String(v || '').trim().toLowerCase(); if (!v) return ''; if (/^hy|հայ|arm/.test(v)) return 'hy'; if (/^ru|рус|ռուս/.test(v)) return 'ru'; if (/^en|eng|անգլ/.test(v)) return 'en'; return v.slice(0, 5); }
+function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
+const yearOfDate = v => { const m = String(v || '').match(/\b(1[5-9]\d\d|20\d\d)\b/); return m ? m[0] : ''; };
+function autoDesc(it) { return [(TYPES[it.type] || {}).label, it.lang ? (LANGS[it.lang] || it.lang) : '', it.section && it.section !== it.domain ? it.section : ''].filter(Boolean).join(' · '); }
 const isAI = l => /chatgpt\.com|chat\.openai\.com/i.test(String(l || ''));
 const AI_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg>';
 const aiMark = () => `<span class="ai-mark" title="Ստեղծված է ChatGPT-ով">${AI_SVG}AI · ChatGPT</span>`;
@@ -1115,17 +1168,20 @@ const DOMAINS = [
   { code: 'ITC', title: 'Տեղեկատվական տեխնոլոգիաներ', description: 'Համակարգչային հմտություններ, ծրագրային ապահովում, տվյալների բազաներ և ՏՏ հիմունքներ։', q: 'information technology computer science' },
   { code: 'WLD', title: 'Համաշխարհային տնտեսություն & Պատմություն', description: 'Միջազգային տնտեսական հարաբերություններ, արտաքին առևտուր և տնտեսական պատմություն։', q: 'world economy economic history' }
 ];
-DOMAINS.forEach((d, i) => { d.tint = TINTS[i % TINTS.length]; d.n = i + 1; });
+const SECTION_OF = { ALG: 'Մաթեմատիկա', ANL: 'Մաթեմատիկա', OPR: 'Մաթեմատիկա', MIC: 'Տնտեսագիտություն', MAC: 'Տնտեսագիտություն', FIN: 'Տնտեսագիտություն', WLD: 'Տնտեսագիտություն', MGT: 'Կառավարում', PRD: 'Կառավարում', SRV: 'Կառավարում', PSY: 'Հոգեբանություն', ITC: 'Տեղեկատվական տեխնոլոգիաներ' };
+DOMAINS.forEach((d, i) => { d.tint = TINTS[i % TINTS.length]; d.n = i + 1; d.section = SECTION_OF[d.code]; });
 const DEFAULT_DOMAIN = 'Տեղեկատվական տեխնոլոգիաներ';
 
 function domainOf(title) { return DOMAINS.find(d => d.title === title); }
-function ensureDomain(title, tags) {
+function ensureDomain(title, tags, section) {
   title = String(title || '').trim();
   if (!title) return;
-  if (domainOf(title)) return;
+  const ex = domainOf(title);
+  if (ex) { if (section && !ex.section) ex.section = section; return; }
   const n = DOMAINS.length + 1;
-  DOMAINS.push({ code: 'D' + String(n).padStart(2, '0'), title, description: `Ոլորտ՝ ${title}`, q: title, tint: TINTS[stableHashNum(title) % TINTS.length], n, custom: true, tags: tags || [] });
+  DOMAINS.push({ code: 'D' + String(n).padStart(2, '0'), title, section: section || 'Այլ', description: `Բաժին՝ ${section || 'Այլ'}`, q: title, tint: TINTS[stableHashNum(title) % TINTS.length], n, custom: true, tags: tags || [] });
 }
+const sectionOf = m => m.section || (domainOf(m.domain) || {}).section || 'Այլ';
 function stableHashNum(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 function tintOf(title) { const d = domainOf(title); return d ? d.tint : TINTS[stableHashNum(String(title)) % TINTS.length]; }
 
@@ -1168,7 +1224,7 @@ let bookmarks = load(K.bm, []);
 let materials = [];
 let current = null;                     // item open in the modal
 
-const ui = { q: '', domain: 'ALL', type: 'ALL', sort: 'NEWEST', onlyBm: false, tab: 'materials' };
+const ui = { q: '', section: 'ALL', domain: 'ALL', type: 'ALL', lang: 'ALL', sort: 'RANDOM', onlyBm: false, tab: 'materials' };
 
 function rebuild() {
   const sheetItems = (sheetCache && Array.isArray(sheetCache.items)) ? sheetCache.items : [];
@@ -1178,8 +1234,8 @@ function rebuild() {
   [...userItems, ...primary].forEach(m => {
     if (!m || !m.id || seen.has(m.id)) return;
     seen.add(m.id);
-    ensureDomain(m.domain, m.tags);
-    out.push({ ...m, type: canonicalType(m.link, m.type) });
+    ensureDomain(m.domain, m.tags, m.section);
+    out.push({ ...m, section: sectionOf(m), type: canonicalType(m.link, m.type) });
   });
   materials = out;
 }
@@ -1191,11 +1247,17 @@ const COLS = {
   title: ['վերնագիր', 'անվանում', 'անուն', 'title', 'name', 'название', 'наименование'],
   author: ['հեղինակ', 'հեղինակներ', 'աղբյուր', 'author', 'authors', 'автор'],
   link: ['հղում', 'հղումը', 'link', 'url', 'href', 'ссылка'],
-  domain: ['ոլորտ', 'առարկա', 'բաժին', 'կատեգորիա', 'domain', 'category', 'subject', 'предмет', 'категория'],
+  domain: ['ոլորտ', 'ոլորտը', 'առարկա', 'կատեգորիա', 'domain', 'field', 'topic', 'category', 'subject', 'предмет', 'категория'],
+  section: ['բաժին', 'բաժինը', 'section', 'раздел'],
+  lang: ['language', 'լեզու', 'lang', 'язык'],
+  date: ['date', 'ամսաթիվ', 'տարի', 'year', 'дата'],
+  pages: ['total pages', 'pages', 'էջեր', 'էջերի քանակ', 'страниц'],
+  cover: ['image', 'նկար', 'cover', 'img', 'обложка'],
+  hidden: ['source'],
   type: ['տեսակ', 'ձևաչափ', 'ձեւաչափ', 'ֆորմատ', 'տիպ', 'type', 'format', 'формат', 'тип'],
   description: ['նկարագրություն', 'նկարագիր', 'description', 'desc', 'описание'],
   tags: ['թեգեր', 'թեգ', 'բանալի բառեր', 'tags', 'keywords', 'теги'],
-  rating: ['վարկանիշ', 'գնահատական', 'rating', 'rate', 'оценка']
+  rating: ['my rating', 'վարկանիշ', 'գնահատական', 'rating', 'rate', 'оценка']
 };
 const KNOWN = new Set(Object.values(COLS).flat());
 
@@ -1236,10 +1298,12 @@ function rowsToItems(rows, rowLinks, prefix) {
       const inText = Object.values(row).map(String).join(' ').match(/https?:\/\/[^\s"'<>]+/);
       link = found || (inText ? inText[0] : '') || '#';
     }
-    const domain = pick(norm, COLS.domain) || DEFAULT_DOMAIN;
+    const section = pick(norm, COLS.section);
+    const domain = pick(norm, COLS.domain) || section || DEFAULT_DOMAIN;
+    const cover = pick(norm, COLS.cover);
     const tagsRaw = pick(norm, COLS.tags);
     let rating = parseFloat(pick(norm, COLS.rating).replace(',', '.'));
-    if (!isFinite(rating) || rating <= 0) rating = 5; if (rating > 5) rating = 5;
+    if (!isFinite(rating) || rating <= 0) rating = 0; if (rating > 5) rating = 5;
     const extra = {};
     Object.keys(row).forEach(k => {
       const nk = String(k).trim().toLowerCase();
@@ -1253,9 +1317,14 @@ function rowsToItems(rows, rowLinks, prefix) {
       author: pick(norm, COLS.author) || 'Անհայտ',
       link,
       domain,
+      section: section || '',
+      lang: normLang(pick(norm, COLS.lang)),
+      date: pick(norm, COLS.date),
+      pages: pick(norm, COLS.pages),
+      cover: /^https?:\/\//i.test(cover) ? cover : '',
       type: canonicalType(link, pick(norm, COLS.type)),
       rating,
-      description: pick(norm, COLS.description) || 'Ուսումնական ռեսուրս RedStoneLibrary-ից։',
+      description: pick(norm, COLS.description),
       tags: tagsRaw ? tagsRaw.split(/[,;|]/).map(t => t.trim()).filter(Boolean) : [],
       extra,
       origin: prefix === 'RSL-S-' ? 'sheet' : 'import'
@@ -1361,14 +1430,20 @@ function countsByDomain() {
   return m;
 }
 
-function populateDomainSelect() {
-  const sel = $('#f-domain');
-  const prev = sel.value || 'ALL';
-  const counts = countsByDomain();
-  sel.innerHTML = '<option value="ALL">Բոլոր ոլորտները</option>' +
-    DOMAINS.filter(d => counts.get(d.title)).map(d => `<option value="${esc(d.title)}">${esc(d.title)} (${counts.get(d.title)})</option>`).join('');
+function fillSelect(sel, allLabel, entries, prev) {
+  sel.innerHTML = `<option value="ALL">${allLabel}</option>` + entries.map(([v, label, n]) => `<option value="${esc(v)}">${esc(label)} (${fmt(n)})</option>`).join('');
   sel.value = [...sel.options].some(o => o.value === prev) ? prev : 'ALL';
-  ui.domain = sel.value;
+  return sel.value;
+}
+function countBy(list, key) { const m = new Map(); list.forEach(x => { const k = key(x); if (k) m.set(k, (m.get(k) || 0) + 1); }); return m; }
+function populateDomainSelect() {
+  const secs = countBy(materials, m => m.section);
+  ui.section = fillSelect($('#f-section'), 'Բոլոր բաժինները', [...secs].sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, k, n]), ui.section);
+  const inSec = ui.section === 'ALL' ? materials : materials.filter(m => m.section === ui.section);
+  const doms = countBy(inSec, m => m.domain);
+  ui.domain = fillSelect($('#f-domain'), 'Բոլոր ոլորտները', DOMAINS.filter(d => doms.get(d.title)).map(d => [d.title, d.title, doms.get(d.title)]), ui.domain);
+  const langs = countBy(materials, m => m.lang);
+  ui.lang = fillSelect($('#f-lang'), 'Բոլոր լեզուները', [...langs].sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, LANGS[k] || k.toUpperCase(), n]), ui.lang);
 }
 
 function updateStats() { animateTotal(materials.length); }
@@ -1376,10 +1451,11 @@ function updateStats() { animateTotal(materials.length); }
 function filtered() {
   const q = ui.q;
   let list = materials.filter(m => {
-    const hay = !q || [m.title, m.author, m.description, m.domain, ...(m.tags || [])].some(v => String(v || '').toLowerCase().includes(q));
-    return hay && (ui.domain === 'ALL' || m.domain === ui.domain) && (ui.type === 'ALL' || (ui.type === 'AI' ? isAI(m.link) : m.type === ui.type)) && (!ui.onlyBm || bookmarks.includes(m.id));
+    const hay = !q || [m.title, m.author, m.description, m.domain, m.section, hostOf(m.link), ...(m.tags || [])].some(v => String(v || '').toLowerCase().includes(q));
+    return hay && (ui.section === 'ALL' || m.section === ui.section) && (ui.domain === 'ALL' || m.domain === ui.domain) && (ui.lang === 'ALL' || m.lang === ui.lang) && (ui.type === 'ALL' || (ui.type === 'AI' ? isAI(m.link) : m.type === ui.type)) && (!ui.onlyBm || bookmarks.includes(m.id));
   });
-  if (ui.sort === 'TITLE_ASC') list = list.slice().sort((a, b) => a.title.localeCompare(b.title, 'hy'));
+  if (ui.sort === 'RANDOM') list = list.slice().sort((a, b) => rnd01(a.id + '|o') - rnd01(b.id + '|o'));
+  else if (ui.sort === 'TITLE_ASC') list = list.slice().sort((a, b) => a.title.localeCompare(b.title, 'hy'));
   else if (ui.sort === 'RATING_DESC') list = list.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0));
   return list;
 }
@@ -1387,17 +1463,118 @@ function filtered() {
 function applyFilters() {
   const list = filtered();
   $('#found').textContent = fmt(list.length);
-  $('#reset').hidden = !(ui.q || ui.domain !== 'ALL' || ui.type !== 'ALL' || ui.onlyBm);
+  $('#reset').hidden = !(ui.q || ui.section !== 'ALL' || ui.domain !== 'ALL' || ui.type !== 'ALL' || ui.lang !== 'ALL' || ui.onlyBm);
   renderGrid(list);
   updateOnline();
 }
 
-function spanFor(item, i) {
-  // Calm rhythm: a dark feature every 11 cards, a wide card every 7 — only in the unfiltered library
-  if (ui.q || ui.domain !== 'ALL' || ui.type !== 'ALL' || ui.onlyBm) return '';
-  if (i % 11 === 0) return 'card--feature';
-  if (i % 7 === 3) return 'card--wide';
-  return '';
+/* ==================================================================
+   MOSAIC — random squares and rectangles, packed like tetris, no gaps
+   Every page load gets a new seed, so order and shapes change each visit.
+   ================================================================== */
+let SEED = (Math.random() * 4294967296) >>> 0;
+function reseed() { SEED = (Math.random() * 4294967296) >>> 0; }
+function rnd01(str) {
+  let h = (2166136261 ^ SEED) >>> 0;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15;
+  return (h >>> 0) / 4294967296;
+}
+const SHAPES = [[1, 1, .46], [2, 1, .2], [1, 2, .18], [2, 2, .11], [3, 1, .05]];
+function prefShape(key) { let r = rnd01(key + '|s'); for (const [w, h, p] of SHAPES) { if (r < p) return [w, h]; r -= p; } return [1, 1]; }
+const FILL_WORDS = ['Քար առ քար', '◇', 'RED STONE', 'Գիտելիք', '◆ ◇ ◆'];
+
+let libMosaic = null;
+class Mosaic {
+  constructor(grid, min) {
+    this.grid = grid; this.min = min || 250; this.items = []; this.fills = []; this.occ = []; this.cols = 0;
+    if ('ResizeObserver' in window) {
+      let t = null;
+      new ResizeObserver(() => { clearTimeout(t); t = setTimeout(() => { if (this.items.length && this.colsFor() !== this.cols) this.relayout(); }, 120); }).observe(grid);
+    }
+  }
+  colsFor() {
+    const w = this.grid.clientWidth || (this.grid.parentElement && this.grid.parentElement.clientWidth) || 0;
+    if (!w) return this.cols || 1;
+    return Math.max(1, Math.min(6, Math.floor((w + 14) / (this.min + 14))));
+  }
+  reset() { this.items = []; this.clearFills(); this.occ = []; this.cols = this.colsFor(); this.grid.style.setProperty('--cols', this.cols); }
+  free(r, c) { return c < this.cols && !(this.occ[r] && this.occ[r][c]); }
+  fits(r, c, w, h) { if (c + w > this.cols) return false; for (let y = r; y < r + h; y++) for (let x = c; x < c + w; x++) if (!this.free(y, x)) return false; return true; }
+  mark(r, c, w, h, v) { for (let y = r; y < r + h; y++) { this.occ[y] = this.occ[y] || []; for (let x = c; x < c + w; x++) this.occ[y][x] = v; } }
+  firstFree() { for (let r = 0; ; r++) for (let c = 0; c < this.cols; c++) if (this.free(r, c)) return [r, c]; }
+  place(el) {
+    let [w, h] = prefShape(el.dataset.key || String(this.items.length));
+    if (this.cols === 1) w = 1;
+    if (this.cols === 2 && w === 3) w = 2;
+    w = Math.min(w, this.cols);
+    const [r, c] = this.firstFree();       // always fill the first hole → no gaps
+    for (const [tw, th] of [[w, h], [Math.min(w, 2), h], [w, 1], [1, h], [1, 1]]) if (this.fits(r, c, tw, th)) { w = tw; h = th; break; }
+    const it = { el, r, c, w, h };
+    this.items.push(it); this.mark(r, c, w, h, it); this.apply(it);
+    return it;
+  }
+  apply(it) {
+    const s = it.el.style;
+    s.gridColumn = `${it.c + 1} / span ${it.w}`; s.gridRow = `${it.r + 1} / span ${it.h}`;
+    it.el.dataset.w = it.w; it.el.dataset.h = it.h;
+    const cl = it.el.classList;
+    cl.toggle('card--feature', it.w >= 2 && it.h === 2);
+    cl.toggle('card--wide', it.w >= 2 && it.h === 1);
+    cl.toggle('card--tall', it.w === 1 && it.h === 2);
+    cl.toggle('card--quartz', it.w * it.h < 4 && rnd01((it.el.dataset.key || '') + '|q') < .2);
+  }
+  add(els) {
+    if (!this.cols) this.reset();
+    this.clearFills();
+    els.forEach((el, k) => {
+      const it = this.place(el);
+      el.classList.add('fall');
+      el.style.setProperty('--d', Math.min(k * 45 + it.c * 25, 900) + 'ms');
+    });
+    this.seal();
+  }
+  /* Close the ragged bottom edge: stretch neighbours into holes, then plug any left with brand tiles */
+  seal() {
+    const rows = () => this.items.reduce((m, i) => Math.max(m, i.r + i.h), 0);
+    let changed = true, guard = 0;
+    while (changed && guard++ < 50) {
+      changed = false;
+      const R = rows();
+      for (let r = 0; r < R; r++) for (let c = 0; c < this.cols; c++) {
+        if (!this.free(r, c)) continue;
+        const L = c > 0 && this.occ[r] && this.occ[r][c - 1];
+        if (L && L.c + L.w === c && L.w < 3 && this.colFree(L.r, L.h, c)) { this.mark(L.r, c, 1, L.h, L); L.w++; this.apply(L); changed = true; continue; }
+        const U = r > 0 && this.occ[r - 1] && this.occ[r - 1][c];
+        if (U && U.r + U.h === r && U.h < 3 && this.rowFree(r, U.c, U.w)) { this.mark(r, U.c, U.w, 1, U); U.h++; this.apply(U); changed = true; }
+      }
+    }
+    const R = rows();
+    for (let r = 0; r < R; r++) for (let c = 0; c < this.cols; c++) {
+      if (!this.free(r, c)) continue;
+      let w = 1; while (c + w < this.cols && this.free(r, c + w)) w++;
+      const f = document.createElement('div');
+      f.className = 'mosaic-fill'; f.setAttribute('aria-hidden', 'true');
+      f.style.gridColumn = `${c + 1} / span ${w}`; f.style.gridRow = `${r + 1} / span 1`;
+      f.style.setProperty('--tint', TINTS[(r * 7 + c * 3 + SEED) % TINTS.length]);
+      f.style.setProperty('--rot', ((r * 37 + c * 53) % 72) - 36 + 'deg');
+      f.style.setProperty('--d', 300 + c * 40 + 'ms');
+      f.innerHTML = `<span>${FILL_WORDS[(r + c + SEED) % FILL_WORDS.length]}</span>`;
+      this.grid.appendChild(f);
+      const fi = { r, c, w, h: 1, fill: true };
+      this.mark(r, c, w, 1, fi); this.fills.push({ el: f, it: fi });
+      c += w - 1;
+    }
+  }
+  colFree(r0, h, c) { if (c >= this.cols) return false; for (let y = r0; y < r0 + h; y++) if (!this.free(y, c)) return false; return true; }
+  rowFree(r, c0, w) { for (let x = c0; x < c0 + w; x++) if (!this.free(r, x)) return false; return true; }
+  clearFills() { this.fills.forEach(f => { f.el.remove(); this.mark(f.it.r, f.it.c, f.it.w, 1, null); }); this.fills = []; }
+  relayout() {
+    const els = this.items.map(i => i.el);
+    this.reset();
+    els.forEach(el => this.place(el));
+    this.seal();
+  }
 }
 
 function cardHTML(item, i, opts) {
@@ -1416,41 +1593,46 @@ function cardHTML(item, i, opts) {
       acts += `<button type="button" class="icon-btn" data-act="del" data-id="${esc(item.id)}" title="Ջնջել" aria-label="Ջնջել"><i class="ic">${ic('trash')}</i></button>`;
     acts += `<button type="button" class="icon-btn${bm ? ' on' : ''}" data-act="bm" data-id="${esc(item.id)}" aria-pressed="${bm}" aria-label="Պահպանել"><i class="ic">${bm ? ic('bookmark').replace('fill="none"', 'fill="currentColor"') : ic('bookmark')}</i></button>`;
   }
-  const meta = opts.web ? `${esc(item.author || 'Անհայտ')}${item.year ? ' · ' + esc(item.year) : ''}` : esc(item.author || 'Անհայտ');
+  const host = hostOf(item.link);
+  const who = item.author && item.author !== 'Անհայտ' ? item.author : (host || 'Անհայտ');
+  const when = item.year || yearOfDate(item.date);
+  const meta = `${esc(who)}${when ? ' · ' + esc(when) : ''}`;
+  const desc = item.description || autoDesc(item);
   const ai = isAI(item.link);
   const extras = (ai ? aiMark() : '') + (opts.web && item.oa ? '<span class="oa">OPEN</span>' : '') + (opts.web && item.cites ? `<span class="cites">${fmt(item.cites)} մեջբ.</span>` : '');
   return `
     <div class="card__shard" aria-hidden="true" style="--rot:${(stableHashNum(item.id) % 72) - 36}deg"></div>
     <div class="card__acts">${acts}</div>
     <div class="card__body">
-      <div class="card__top"><span class="card__no">${no}</span>${typeBadge(item.type)}${opts.web ? `<span class="web-tag"><i class="ic">${ic('globe')}</i>${esc(item.source)}</span>` : ''}${extras}</div>
+      <div class="card__top">${host ? `<img class="fav" src="https://icons.duckduckgo.com/ip3/${esc(host)}.ico" alt="" width="16" height="16" loading="lazy" onerror="this.remove()">` : ''}<span class="card__no">${no}</span>${typeBadge(item.type)}${item.lang ? `<span class="lang">${esc(item.lang.toUpperCase())}</span>` : ''}${opts.web ? `<span class="web-tag"><i class="ic">${ic('globe')}</i>${esc(item.source)}</span>` : ''}${extras}</div>
       <h3 class="card__title">${esc(item.title)}</h3>
+      ${item.cover ? `<img class="card__cover" src="${esc(item.cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <p class="card__author"><i class="ic">${ic('user')}</i><span>${meta}</span></p>
-      ${item.description ? `<p class="card__desc">${esc(item.description)}</p>` : ''}
+      ${desc ? `<p class="card__desc">${esc(desc)}</p>` : ''}
       ${dbOfItem(item) ? `<p class="card__dbn">${dbNote(dbOfItem(item))}</p>` : ''}
     </div>
     <div class="card__foot">
-      <span class="area"><i></i><span>${esc(opts.web ? (item.source || 'Web') : item.domain)}</span></span>
+      <span class="area"><i></i><span>${esc(opts.web ? (item.source || 'Web') : (item.section && item.section !== item.domain ? item.section + ' › ' + item.domain : item.domain))}</span></span>
       <a class="open-link" href="${esc(safeUrl(item.link))}" target="_blank" rel="noopener noreferrer" data-act="link">Բացել<i class="ic">${ic('arrow-ur')}</i></a>
     </div>${ai ? '<span class="card__stamp" aria-hidden="true"></span>' : ''}`;
 }
 
 function buildCard(item, i) {
   const el = document.createElement('article');
-  const span = spanFor(item, i);
-  el.className = `card card-in ${span}${isAI(item.link) ? ' card--ai' : ''}`;
+  el.className = `card${isAI(item.link) ? ' card--ai' : ''}`;
   el.style.setProperty('--tint', tintOf(item.domain));
-  el.style.animationDelay = Math.min((i % BATCH) * 45, 500) + 'ms';
   el.tabIndex = 0;
   el.dataset.id = item.id;
+  el.dataset.key = item.id;
   el.setAttribute('aria-label', item.title);
-  el.innerHTML = cardHTML(item, i, { span });
+  el.innerHTML = cardHTML(item, i, {});
   return el;
 }
 
 function renderGrid(items) {
   const grid = $('#grid');
   grid.innerHTML = '';
+  libMosaic.reset();
   gridItems = items; gridShown = 0;
   if (gridLoading && !items.length) {
     grid.innerHTML = Array.from({ length: 8 }, () => '<div class="skel"></div>').join('');
@@ -1463,8 +1645,10 @@ function renderGrid(items) {
 }
 function nextBatch() {
   const frag = document.createDocumentFragment();
-  gridItems.slice(gridShown, gridShown + BATCH).forEach((it, k) => frag.appendChild(buildCard(it, gridShown + k)));
+  const els = gridItems.slice(gridShown, gridShown + BATCH).map((it, k) => buildCard(it, gridShown + k));
+  els.forEach(e => frag.appendChild(e));
   $('#grid').appendChild(frag);
+  libMosaic.add(els);
   gridShown = Math.min(gridItems.length, gridShown + BATCH);
   $('#more').hidden = gridShown >= gridItems.length;
 }
@@ -1481,27 +1665,37 @@ function setupObserver() {
 function renderDomains() {
   const box = $('#domains');
   const counts = countsByDomain();
-  const list = DOMAINS.filter(d => counts.get(d.title) || !d.custom);
   box.innerHTML = '';
-  list.forEach((d, i) => {
-    const items = materials.filter(m => m.domain === d.title);
-    const total = items.length;
-    const mix = Object.keys(TYPES).map(t => ({ t, n: items.filter(m => m.type === t).length })).filter(x => x.n);
-    const el = document.createElement('article');
-    el.className = 'dom card-in' + (total ? '' : ' dom--empty');
-    el.style.setProperty('--tint', d.tint);
-    el.style.animationDelay = Math.min(i * 50, 600) + 'ms';
-    el.innerHTML = `
-      <span class="dom__n" aria-hidden="true">${String(d.n).padStart(2, '0')}</span>
-      <div class="dom__facet" aria-hidden="true"></div>
-      <p class="dom__code"><span>${String(d.n).padStart(2, '0')} — ${esc(d.code)}</span><b>${fmt(total)} ռեսուրս</b></p>
-      <h3>${esc(d.title)}</h3>
-      <p>${esc(d.description)}</p>
-      ${mix.length ? `<div class="dom__mix" aria-hidden="true">${mix.map(x => `<span style="flex:${x.n};--tc:${TYPES[x.t].color}"></span>`).join('')}</div>
-      <div class="dom__legend">${mix.map(x => `<span style="--tc:${TYPES[x.t].color}"><i></i>${esc(TYPES[x.t].label)} ${x.n}</span>`).join('')}</div>` : ''}
-      <div class="dom__spacer"></div>
-      <button type="button" class="btn btn--sm" data-act="domain" data-domain="${esc(d.title)}" ${total ? '' : 'disabled'}>Դիտել ռեսուրսները <i class="ic">${ic('arrow-right')}</i></button>`;
-    box.appendChild(el);
+  const used = DOMAINS.filter(d => counts.get(d.title));
+  const secs = [...countBy(used, d => d.section || 'Այլ')].sort((a, b) => b[1] - a[1]).map(x => x[0]);
+  let i = 0;
+  secs.forEach((sec, si) => {
+    const doms = used.filter(d => (d.section || 'Այլ') === sec).sort((a, b) => counts.get(b.title) - counts.get(a.title));
+    const total = doms.reduce((t, d) => t + counts.get(d.title), 0);
+    const head = document.createElement('div');
+    head.className = 'sec-head';
+    head.innerHTML = `<p class="st__idx"><b>${String(si + 1).padStart(2, '0')}</b><span>Բաժին</span><span>${doms.length} ոլորտ · ${fmt(total)} նյութ</span></p><h3>${esc(sec)}</h3><button type="button" class="btn btn--sm" data-act="section" data-section="${esc(sec)}">Ամբողջ բաժինը <i class="ic">${ic('arrow-right')}</i></button>`;
+    box.appendChild(head);
+    doms.forEach(d => {
+      const items = materials.filter(m => m.domain === d.title);
+      const mix = Object.keys(TYPES).map(t => ({ t, n: items.filter(m => m.type === t).length })).filter(x => x.n);
+      const langs = [...countBy(items, m => m.lang)].map(([k, n]) => `${(LANGS[k] ? k.toUpperCase() : k)} ${n}`).join(' · ');
+      const el = document.createElement('article');
+      el.className = 'dom card-in';
+      el.style.setProperty('--tint', d.tint);
+      el.style.animationDelay = Math.min(i++ * 40, 600) + 'ms';
+      el.innerHTML = `
+        <span class="dom__n" aria-hidden="true">${String(d.n).padStart(2, '0')}</span>
+        <div class="dom__facet" aria-hidden="true"></div>
+        <p class="dom__code"><span>${String(d.n).padStart(2, '0')} — ${esc(d.code)}</span><b>${fmt(items.length)} ռեսուրս</b></p>
+        <h3>${esc(d.title)}</h3>
+        <p>${esc(d.custom ? `${sec}${langs ? ' · ' + langs : ''}` : d.description)}</p>
+        ${mix.length ? `<div class="dom__mix" aria-hidden="true">${mix.map(x => `<span style="flex:${x.n};--tc:${TYPES[x.t].color}"></span>`).join('')}</div>
+        <div class="dom__legend">${mix.map(x => `<span style="--tc:${TYPES[x.t].color}"><i></i>${esc(TYPES[x.t].label)} ${x.n}</span>`).join('')}</div>` : ''}
+        <div class="dom__spacer"></div>
+        <button type="button" class="btn btn--sm" data-act="domain" data-domain="${esc(d.title)}">Դիտել ռեսուրսները <i class="ic">${ic('arrow-right')}</i></button>`;
+      box.appendChild(el);
+    });
   });
 }
 
@@ -1522,7 +1716,7 @@ function switchTab(tab) {
 /* ==================================================================
    DETAIL MODAL
    ================================================================== */
-function formatCitation(it) { const db = dbOfItem(it); return `${it.author || 'Անհայտ'}. "${it.title}". Ոլորտ՝ ${it.domain}.${db ? ` ${DB_NOTE}՝ ${db}.` : ''} RedStoneLibrary, URL: ${it.link}`; }
+function formatCitation(it) { const db = dbOfItem(it); return `${it.author || 'Անհայտ'}. "${it.title}".${it.section && it.section !== it.domain ? ` Բաժին՝ ${it.section}.` : ''} Ոլորտ՝ ${it.domain}.${db ? ` ${DB_NOTE}՝ ${db}.` : ''} RedStoneLibrary, URL: ${it.link}`; }
 let lastFocus = null;
 function openScrim(id) { lastFocus = document.activeElement; const s = $('#' + id); s.hidden = false; document.body.classList.add('no-scroll'); setTimeout(() => { const f = s.querySelector('[data-close]'); f && f.focus(); }, 30); }
 function closeScrim(id) { $('#' + id).hidden = true; if (!document.querySelector('.scrim:not([hidden])')) document.body.classList.remove('no-scroll'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
@@ -1547,7 +1741,7 @@ function openDetail(id, webIndex, src) {
   const area = $('#m-area'); area.style.setProperty('--tint', tint); area.querySelector('span').textContent = it.domain;
   $('#m-title').textContent = it.title;
   $('#m-author').textContent = it.author || 'Անհայտ';
-  $('#m-desc').textContent = it.description || '';
+  $('#m-desc').textContent = it.description || autoDesc(it);
   $('#m-id').textContent = it.id;
   const cover = $('#m-cover');
   if (it.cover) { cover.src = it.cover; cover.hidden = false; cover.onerror = () => { cover.hidden = true; }; } else { cover.hidden = true; cover.removeAttribute('src'); }
@@ -1557,7 +1751,7 @@ function openDetail(id, webIndex, src) {
   const tags = (it.tags || []).filter(t => String(t).trim());
   $('#m-tags-sec').hidden = !tags.length;
   $('#m-tags').innerHTML = tags.map(t => `<span>${esc(t)}</span>`).join('');
-  const ex = it.extra || {};
+  const ex = Object.assign({}, it.section && currentWeb == null ? { 'Բաժին': it.section, 'Ոլորտ': it.domain } : {}, it.lang ? { 'Լեզու': LANGS[it.lang] || it.lang } : {}, it.date ? { 'Ամսաթիվ': it.date } : {}, it.pages ? { 'Էջեր': it.pages } : {}, hostOf(it.link) ? { 'Կայք': hostOf(it.link) } : {}, it.extra || {});
   const keys = Object.keys(ex);
   $('#m-extra-sec').hidden = !keys.length;
   $('#m-extra').innerHTML = keys.map(k => { const v = String(ex[k]); const link = /^https?:\/\//i.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>` : esc(v); return `<dt>${esc(k)}</dt><dd>${link}</dd>`; }).join('');
@@ -1883,6 +2077,7 @@ const dedupeKey = r => String(r.title).toLowerCase().replace(/[^\p{L}\p{N}]+/gu,
 function makeSearch(cfg) {
   const el = k => document.getElementById(cfg.ids[k]);
   const S = { src: cfg.src, sig: '', sort: '', q: '', type: 'ALL', domain: 'ALL', page: 0, runs: [], seen: new Set(), loading: false, ready: false, timer: null, empty: 0, view: [] };
+  S.mosaic = new Mosaic(el('grid'));
   S.status = html => { const b = el('status'); b.innerHTML = html || ''; b.hidden = !html; };
   S.label = () => {
     const used = S.runs.filter(r => r.n).length;
@@ -1892,6 +2087,7 @@ function makeSearch(cfg) {
     clearTimeout(S.timer);
     Object.assign(S, { sig: '', q: '', page: 0, runs: [], seen: new Set(), loading: false, ready: false, empty: 0, view: [] });
     el('grid').innerHTML = ''; el('more').hidden = true;
+    S.mosaic.reset();
     cfg.paint();
   };
   S.update = () => {
@@ -1969,9 +2165,9 @@ function makeSearch(cfg) {
   };
   S.card = (r, i) => {
     const c = document.createElement('article');
-    c.className = 'card card-in' + (isAI(r.link) ? ' card--ai' : '');
+    c.className = 'card' + (isAI(r.link) ? ' card--ai' : '');
+    c.dataset.key = webId(r);
     c.style.setProperty('--tint', (ENGINES.find(e => e.id === r.engine) || {}).color || TINTS[0]);
-    c.style.animationDelay = Math.min((i % PER) * 30, 420) + 'ms';
     c.dataset.web = i; c.dataset.src = S.src;
     c.tabIndex = 0;
     c.setAttribute('aria-label', r.title);
@@ -1980,14 +2176,18 @@ function makeSearch(cfg) {
   };
   S.append = batch => {
     const frag = document.createDocumentFragment();
-    batch.forEach(r => { S.view.push(r); frag.appendChild(S.card(r, S.view.length - 1)); });
+    const els = batch.map(r => { S.view.push(r); return S.card(r, S.view.length - 1); });
+    els.forEach(e => frag.appendChild(e));
     el('grid').appendChild(frag);
+    S.mosaic.add(els);
   };
   S.rerender = () => {
     S.sortList(S.view);
     const frag = document.createDocumentFragment();
-    S.view.forEach((r, i) => frag.appendChild(S.card(r, i)));
-    el('grid').innerHTML = ''; el('grid').appendChild(frag);
+    const els = S.view.map((r, i) => S.card(r, i));
+    els.forEach(e => frag.appendChild(e));
+    el('grid').innerHTML = ''; S.mosaic.reset(); el('grid').appendChild(frag);
+    S.mosaic.add(els);
   };
   if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && el('grid').offsetParent) S.loadMore(); }), { rootMargin: '900px' }).observe(el('sentinel'));
   el('moreBtn').addEventListener('click', () => S.loadMore());
@@ -1999,7 +2199,7 @@ const searches = {};
 function initSearches() {
   LIB = searches.lib = makeSearch({
     src: 'lib', icon: 'globe', title: 'Ինտերնետից', unit: 'համակարգ', unitIn: 'համակարգերում',
-    noneMsg: 'Միացրեք գոնե մեկ որոնողական համակարգ այս ձևաչափի համար։',
+    noneMsg: 'Այս ձևաչափով ինտերնետային արդյունքներ չկան — միացրեք համակարգեր կամ ընտրեք այլ ձևաչափ։',
     ids: { block: 'online', grid: 'online-grid', status: 'online-status', label: 'online-label', more: 'online-more', loader: 'online-loader', moreBtn: 'online-more-btn', sentinel: 'online-sentinel' },
     engines: () => ENGINES.filter(e => enabledEngines.has(e.id)),
     state: () => ({ active: !ui.onlyBm, q: ui.q, type: ui.type, sort: ui.sort, domain: ui.domain }),
@@ -2205,15 +2405,19 @@ function onSearch() {
   qTimer = setTimeout(() => { ui.q = input.value.trim().toLowerCase(); applyFilters(); }, 200);
 }
 function resetFilters() {
-  $('#q').value = ''; $('#f-domain').value = 'ALL'; $('#f-type').value = 'ALL'; $('#f-sort').value = 'NEWEST';
-  Object.assign(ui, { q: '', domain: 'ALL', type: 'ALL', sort: 'NEWEST', onlyBm: false });
+  $('#q').value = ''; $('#f-type').value = 'ALL'; $('#f-sort').value = 'RANDOM';
+  Object.assign(ui, { q: '', section: 'ALL', domain: 'ALL', type: 'ALL', lang: 'ALL', sort: 'RANDOM', onlyBm: false });
+  populateDomainSelect();
   $('#only-bm').setAttribute('aria-pressed', 'false');
   applyFilters();
 }
 
 function bind() {
   $('#q').addEventListener('input', onSearch);
+  $('#f-section').addEventListener('change', e => { ui.section = e.target.value; ui.domain = 'ALL'; populateDomainSelect(); applyFilters(); });
   $('#f-domain').addEventListener('change', e => { ui.domain = e.target.value; applyFilters(); });
+  $('#f-lang').addEventListener('change', e => { ui.lang = e.target.value; applyFilters(); });
+  $('#shuffle-btn').addEventListener('click', () => { reseed(); if (ui.sort !== 'RANDOM') { ui.sort = 'RANDOM'; $('#f-sort').value = 'RANDOM'; } applyFilters(); window.scrollTo({ top: $('#grid').getBoundingClientRect().top + scrollY - 140, behavior: 'smooth' }); });
   $('#f-type').addEventListener('change', e => { ui.type = e.target.value; applyFilters(); });
   $('#f-sort').addEventListener('change', e => { ui.sort = e.target.value; applyFilters(); });
   $('#reset').addEventListener('click', resetFilters);
@@ -2273,7 +2477,8 @@ function bind() {
     if (a === 'tab-domains') { switchTab('domains'); return; }
 
     if (a === 'reset') { resetFilters(); return; }
-    if (a === 'domain') { switchTab('materials'); $('#f-domain').value = act.dataset.domain; ui.domain = act.dataset.domain; applyFilters(); return; }
+    if (a === 'domain') { const d = domainOf(act.dataset.domain); ui.section = d && d.section ? d.section : 'ALL'; ui.domain = act.dataset.domain; populateDomainSelect(); switchTab('materials'); applyFilters(); return; }
+    if (a === 'section') { ui.section = act.dataset.section; ui.domain = 'ALL'; populateDomainSelect(); switchTab('materials'); applyFilters(); return; }
     if (a === 'bm') { e.stopPropagation(); toggleBookmark(act.dataset.id); return; }
     if (a === 'del') { e.stopPropagation(); deleteItem(act.dataset.id); return; }
     if (a === 'save-web') { e.stopPropagation(); saveWeb(+act.dataset.i, act.dataset.src); return; }
@@ -2304,6 +2509,7 @@ function boot() {
   bind();
   rebuild();
   // If we already have a cached sheet, show it immediately (no skeleton)
+  libMosaic = new Mosaic($('#grid'));
   initSearches();
   renderEngines();
   renderDbCards();
